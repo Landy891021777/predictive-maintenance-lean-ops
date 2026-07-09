@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pth
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Office 暫存
+~$*.xlsx
+~$*.docx
+~$*.pptx
+
+# Power BI 快取
+*.pbix.tmp
+
+# 大型資料集（保留 sample-data 內的小樣本）
+data/raw/
+*.zip

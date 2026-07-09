@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAE 預測性維護 — 面試小抄</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;padding:0 16px 70px;font-family:"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:#eef2f7;color:#1a2230;line-height:1.62;}
+  .wrap{max-width:900px;margin:0 auto;}
+  header{background:linear-gradient(135deg,#13314f,#1f6f5c);color:#fff;border-radius:0 0 20px 20px;
+    padding:32px 28px;margin-bottom:24px;}
+  header h1{margin:0 0 6px;font-size:25px;}
+  header p{margin:0;color:#bcd6e8;font-size:14px;}
+  h2.sec{font-size:18px;margin:30px 0 12px;padding-left:11px;border-left:5px solid #1f6f5c;}
+  .card{background:#fff;border-radius:13px;padding:16px 20px;margin-bottom:14px;
+    box-shadow:0 4px 14px rgba(20,40,80,.07);border:1px solid #e5ebf3;}
+  .card.good{border-left:5px solid #1f9d6b;}
+  .card.bad{border-left:5px solid #c0392b;background:#fff8f7;}
+  .card.q{border-left:5px solid #2b6cb0;}
+  table{width:100%;border-collapse:collapse;font-size:13.8px;}
+  th,td{padding:7px 9px;text-align:left;border-bottom:1px solid #eef2f7;}
+  th{background:#f4f7fb;color:#34495e;font-size:12.8px;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:6px;}
+  .t-ok{background:#e7f7ef;color:#1f9d6b;} .t-no{background:#fdeceb;color:#c0392b;}
+  .q-title{font-weight:800;font-size:15px;color:#13314f;margin-bottom:7px;}
+  .ans{background:#f4f8fc;border-radius:9px;padding:10px 13px;font-size:13.7px;margin-top:6px;}
+  .ans b{color:#2b6cb0;}
+  .save{background:#fff5e2;border:1px dashed #e6b94d;border-radius:9px;padding:9px 13px;
+    font-size:13px;color:#6b4e16;margin-top:8px;}
+  .save b{color:#c77a00;}
+  code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:12.7px;color:#34495e;font-family:Consolas,monospace;}
+  .big{font-size:21px;font-weight:800;color:#1f9d6b;}
+  ul{margin:6px 0;padding-left:20px;} li{margin:3px 0;font-size:13.7px;}
+  @media print{body{background:#fff;} .card{box-shadow:none;} header{border-radius:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛠 VAE 預測性維護 — 面試小抄</h1>
+    <p>NASA CMAPSS 航太引擎　│　全部數字已驗證、全部答法守得住　│　工研院 預測維護演算法職</p>
+  </header>
+
+  <!-- ============ PART 1 真實數據 ============ -->
+  <h2 class="sec">① 真實數據（已驗證，可放心講）</h2>
+
+  <div class="card good">
+    <table>
+      <tr><th>項目</th><th>數值</th><th>備註</th></tr>
+      <tr><td>資料集</td><td>NASA CMAPSS FD001</td><td>HPC 單一故障模式</td></tr>
+      <tr><td>引擎數 / 感測器</td><td>100 台 / 21 個</td><td>從健康跑到故障</td></tr>
+      <tr><td>訓練 / 測試筆數</td><td>20,631 / 13,096</td><td>模型評估取每台最後一筆=100 台</td></tr>
+      <tr><td>VAE 架構</td><td>21→64→<b>2D</b>→64→21</td><td>PyTorch；latent=2 為視覺化</td></tr>
+      <tr><td>損失 / 訓練</td><td>MSE + KL×0.0001 / Adam lr0.001, 50 epochs</td><td></td></tr>
+      <tr><td>標籤</td><td>二分類，RUL 分位數 0.33 切健康/危險</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="card good">
+    <b>🎯 VAE 模型實測表現（從 notebook 輸出驗證）</b>
+    <table style="margin-top:8px">
+      <tr><th>類別</th><th>Precision</th><th>Recall</th><th>F1</th><th>樣本數</th></tr>
+      <tr><td>整體準確率</td><td colspan="4"><span class="big">0.85</span></td></tr>
+      <tr><td>Low（健康）</td><td>0.96</td><td>0.81</td><td>0.88</td><td>67</td></tr>
+      <tr><td>High（危險）</td><td>0.70</td><td><b style="color:#1f9d6b">0.94</b></td><td>0.81</td><td>33</td></tr>
+    </table>
+    <div class="save" style="background:#e7f7ef;border-color:#7fd0ae;color:#155e41">
+      <b style="color:#1f9d6b">主打金句：</b>「對『接近故障』這類，<b>Recall 達 94%</b>——100 台快壞的能抓到 94 台，這對安全最重要。代價是 70% precision（有些誤報），但預測維護<b>寧可多檢查、不要漏抓</b>，這取捨是刻意的。」
+    </div>
+  </div>
+
+  <!-- ============ PART 2 地雷 ============ -->
+  <h2 class="sec">② 數字地雷（這些別講 / 講了要加但書）</h2>
+  <div class="card bad">
+    <ul>
+      <li><span class="tag t-no">別講</span><b>「VAE + LSTM」</b> → 實際只有 VAE，沒有 LSTM。</li>
+      <li><span class="tag t-no">別講</span><b>「+21% Precision / 84% 成本↓ / 36% 故障↓」當實測</b> → 公平對照下 VAE 其實輸傳統模型，講「實測提升」會被當場推翻。</li>
+      <li><span class="tag t-no">別講</span><b>「感測器篩選到 12 / 14」</b> → 模型實際輸入 <b>21 維</b>（EDA 辨識出 7 個常數，但沒真的刪）。</li>
+      <li><span class="tag t-no">別講</span><b>「故障樣本 &lt;1%」當你的資料</b> → 你的危險類佔 33%；&lt;1% 只能當「真實世界動機」。</li>
+      <li><span class="tag t-ok">可講但加但書</span><b>跟 Kaggle baseline 比</b> → 必須說「<b>原版是三分類、我是二分類，任務不同，屬參考性對照、非控制變因</b>」。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <b>📌 公平 baseline 對照（我實跑，同任務同資料）— 心裡有數即可，別主動端出</b>
+    <table style="margin-top:8px">
+      <tr><th>模型</th><th>準確率</th><th>健康Precision</th><th>危險Recall</th></tr>
+      <tr><td>RandomForest</td><td>0.92</td><td>1.00</td><td>1.00</td></tr>
+      <tr><td>KNN</td><td>0.94</td><td>0.98</td><td>0.97</td></tr>
+      <tr><td>SVM</td><td>0.90</td><td>0.95</td><td>0.91</td></tr>
+      <tr><td><b>你的 VAE</b></td><td>0.85</td><td>0.96</td><td>0.94</td></tr>
+    </table>
+    <div class="save"><b>提醒：</b>標註充足時傳統模型更準很正常。VAE 真正價值 = <b>非監督、省標籤、可視化退化、抗未知故障</b>，不是贏準確率。</div>
+  </div>
+
+  <!-- ============ PART 3 Q&A ============ -->
+  <h2 class="sec">③ 面試問答（誠實版，可直接背）</h2>
+
+  <div class="card q">
+    <div class="q-title">Q1. 介紹這個專案</div>
+    <div class="ans">用<b>非監督式深度學習</b>從感測訊號自動判斷設備健康、做<b>早期故障預警</b>。我用 NASA 航太引擎資料訓練 <b>VAE</b>，把 21 維感測訊號壓到 2D；模型<b>只學「正常長什麼樣」</b>，退化時訊號偏離正常就會在潛在空間離群，我用距離判斷健康。健康/故障清楚分離，還畫出退化軌跡。<b>方法可跨產業遷移到半導體設備</b>。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q2. 為什麼用 VAE，不用別的？</div>
+    <div class="ans">①非線性降維（贏 <b>PCA</b>）；②KL 讓潛在空間平滑、距離才可信（贏普通 <b>Autoencoder</b>）；③非監督、<b>不需大量故障標籤</b>（贏監督式回歸）。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q3. 健康怎麼區別？</div>
+    <div class="ans">兩訊號：<b>潛在空間距離</b>（健康聚一團、退化離群）+ <b>重建誤差</b>（健康還原得準、退化還原很爛）。分類時用訓練集當參考庫、最近鄰借標籤；標籤是用 <b>RUL 分位數 0.33</b> 切的。</div>
+    <div class="save"><b>誠實補：</b>「門檻是統計切法、非物理依據，更嚴謹可用 piecewise-linear RUL（上限約 125）。」</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q4. 為什麼壓到 2 維？</div>
+    <div class="ans">主要<b>為了視覺化退化軌跡</b>＋可解釋。這是 trade-off，要衝準確率可調高（如 8/16 維）。2 維是刻意的設計選擇，不是極限。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q5. KL 散度規範化是什麼？</div>
+    <div class="ans">KL 衡量兩個分佈差多遠。VAE 用它把每筆資料的編碼分佈<b>推向標準常態 N(0,1)</b>，像一條拉繩讓潛在空間<b>平滑、置中、有組織</b>——這樣用距離判斷健康才可信。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q6. 少樣本學習是什麼？有考慮其他方法嗎？</div>
+    <div class="ans">不靠大量資料訓練分類器，而是<b>準備一小組已知答案的範本，新資料來比對最像誰</b>。我用訓練集 embedding 當範本、最近鄰判斷。<b>考慮過的替代</b>：SMOTE（補樣本）、<b>One-Class SVM、Isolation Forest</b>（單類別異常偵測）、重建誤差設閾值。</div>
+    <div class="save"><b>誠實補：</b>「嚴格說我做的是『潛在空間最近鄰分類』，歸在 few-shot 精神下。」</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q7. One-Class SVM / Isolation Forest 是什麼？</div>
+    <div class="ans"><b>One-Class SVM</b>：在特徵空間畫一個包住所有正常資料的邊界，落在外面=異常。<b>Isolation Forest</b>：隨機切割，<b>異常點幾刀就被孤立</b>，被孤立越快=越異常。兩個都只學正常、抓離群。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q8. 量化數字怎麼算的？baseline 在哪？（高危題）</div>
+    <div class="ans">「模型實測的是混淆矩陣的 <b>Precision/Recall/F1/準確率</b>。我以原始 Kaggle 用<b>傳統機器學習（RF/KNN/SVM）做多級分類、約 70% 準確率</b>為參考基準。」</div>
+    <div class="save"><b>保命台詞（必背）：</b>「原版是三分類、我是二元健康偵測，<b>任務不完全相同，屬參考性對照、不是嚴格控制變因的 A/B</b>。」<br>❌ <b>絕不可說</b>「我做過完全公平對照、VAE 贏」——會被要求重現而翻車。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q9. 這專案是你從頭自己做的嗎？</div>
+    <div class="ans">誠實：<b>fork 自一個 Kaggle 基礎專案</b>，資料讀取/清理/EDA 是站在 baseline 上；<b>我自己的貢獻是加進 VAE 表徵學習、設計潛在空間健康判斷、做退化軌跡視覺化</b>。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q10. 你能預測「精確的故障時間 RUL」嗎？</div>
+    <div class="ans">目前 VAE 做的是<b>健康狀態偵測與早期預警</b>。要預測精確 RUL，我會做<b>兩階段</b>：先用 VAE 學健康表徵（無監督、省標籤），<b>再在表徵上接回歸頭或 LSTM</b> 輸出 RUL。既享受 VAE 省標籤，又達成回歸目標。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q11. 這套怎麼搬到半導體設備？（扣 JD 跨產業）</div>
+    <div class="ans">本質是「<b>從高維感測訊號學健康表徵、偵測異常</b>」。把『引擎感測器』換成『蝕刻/曝光機的溫度、壓力、振動』，方法完全一樣。我已證明它能從航太遷移，這正是貴所要的<b>跨產業泛用性</b>。</div>
+  </div>
+
+  <div class="card q">
+    <div class="q-title">Q12. 科系不是電機/機械/資工 / 不熟 C++、Matlab？</div>
+    <div class="ans">「我科系是管理，但有<b>實際深度學習開發經驗</b>（VAE），加上 MBA 讓我能把演算法連到<b>維護策略的成本效益</b>。工具我主力 Python，C++/Matlab 能讀、<b>願意快速上手</b>。」（誠實，不假裝會。）</div>
+  </div>
+
+  <div style="text-align:center;color:#8aa0bd;font-size:12px;margin-top:26px">
+    核心心法：先承認限制 → 說出正確嚴謹做法 → 收在「會優先補強」。誠實＝技術職最大加分。
+  </div>
+</div>
+</body>
+</html>

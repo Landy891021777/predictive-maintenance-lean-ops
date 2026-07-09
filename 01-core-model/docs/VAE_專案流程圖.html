@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAE 預測性維護 — 完整資料流程圖</title>
+<style>
+  :root{
+    --bg:#0f1419; --card:#ffffff; --ink:#1a2230; --muted:#5b6b82;
+    --line:#c7d2e0; --blue:#2b6cb0; --blue-bg:#eaf2fb;
+    --green:#1f9d6b; --green-bg:#e7f7ef; --amber:#c77a00; --amber-bg:#fff5e2;
+    --purple:#6b46c1; --purple-bg:#f1ecfb; --red:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0 16px 80px;
+    font-family:"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:linear-gradient(180deg,#0f1419 0%,#1b2735 280px,#eef2f7 280px,#eef2f7 100%);
+    color:var(--ink); line-height:1.65;
+  }
+  .wrap{max-width:880px; margin:0 auto;}
+  header{padding:54px 0 40px; text-align:center; color:#fff;}
+  header .tag{display:inline-block; font-size:13px; letter-spacing:3px;
+    color:#9fc3ec; border:1px solid #3a567a; border-radius:30px; padding:5px 16px; margin-bottom:18px;}
+  header h1{margin:0 0 10px; font-size:30px; font-weight:800; letter-spacing:1px;}
+  header p{margin:0; color:#aebfd4; font-size:15px;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+    margin:-18px auto 34px; max-width:760px;}
+  .legend span{font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:6px;}
+  .dot{width:12px; height:12px; border-radius:3px; display:inline-block;}
+
+  .stage{
+    position:relative; background:var(--card); border-radius:16px;
+    padding:20px 24px 18px; margin:0 auto;
+    box-shadow:0 8px 24px rgba(20,40,80,.10); border:1px solid #e5ebf3;
+    border-left:6px solid var(--blue);
+  }
+  .stage.core{border-left-color:var(--purple); background:linear-gradient(180deg,#fbf9ff,#fff);}
+  .stage.result{border-left-color:var(--green); background:linear-gradient(180deg,#f4fdf8,#fff);}
+  .num{
+    position:absolute; top:-14px; left:-14px; width:38px; height:38px;
+    background:var(--blue); color:#fff; border-radius:50%; font-weight:800;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+    box-shadow:0 4px 10px rgba(43,108,176,.4);
+  }
+  .core .num{background:var(--purple); box-shadow:0 4px 10px rgba(107,70,193,.4);}
+  .result .num{background:var(--green); box-shadow:0 4px 10px rgba(31,157,107,.4);}
+  .stage h3{margin:2px 0 8px; font-size:18px;}
+  .stage .what{font-size:14.5px; color:#2c3a4f;}
+  .stage code{background:#eef2f7; padding:1px 7px; border-radius:5px;
+    font-size:13px; color:#34495e; font-family:"Consolas",monospace;}
+  .why{margin-top:11px; background:var(--blue-bg); border-radius:9px;
+    padding:9px 13px; font-size:13.7px; color:#234;}
+  .why b{color:var(--blue);}
+  .core .why{background:var(--purple-bg);} .core .why b{color:var(--purple);}
+  .result .why{background:var(--green-bg);} .result .why b{color:var(--green);}
+  .note{margin-top:9px; background:var(--amber-bg); border-radius:9px;
+    padding:9px 13px; font-size:13.3px; color:#6b4e16; border:1px dashed #e6b94d;}
+  .note b{color:var(--amber);}
+
+  .arrow{height:34px; display:flex; align-items:center; justify-content:center;}
+  .arrow::after{content:"▼"; color:#8aa0bd; font-size:18px;}
+
+  .branch{display:flex; gap:18px; align-items:stretch;}
+  .branch .stage{flex:1; margin:0;}
+  .splitlabel{text-align:center; color:#8aa0bd; font-size:12.5px; margin:6px 0 2px;}
+
+  .summary{background:#11202f; color:#e8eef6; border-radius:16px;
+    padding:26px 28px; margin:36px auto 0;}
+  .summary h2{margin:0 0 14px; font-size:19px; color:#fff;}
+  .summary .chain{background:#1c3046; border-radius:10px; padding:14px 16px;
+    font-size:14.5px; line-height:1.9; color:#cfe0f1;}
+  .summary .chain b{color:#7fd0ff;}
+  .qa{margin-top:18px; display:grid; gap:10px;}
+  .qa div{background:#1c3046; border-radius:9px; padding:11px 14px; font-size:13.8px;}
+  .qa b{color:#ffd479;}
+
+  footer{text-align:center; color:#8aa0bd; font-size:12px; margin-top:30px;}
+  @media print{ body{background:#fff;} header{color:#1a2230;} header .tag{color:#2b6cb0;}
+    header p{color:#5b6b82;} .stage{box-shadow:none;} .summary{background:#eef2f7; color:#1a2230;}
+    .summary h2{color:#1a2230;} .summary .chain{background:#fff; color:#234;} .qa div{background:#fff;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">PREDICTIVE MAINTENANCE · VAE</div>
+    <h1>VAE 預測性維護 — 完整資料流程圖</h1>
+    <p>NASA CMAPSS 航太引擎感測資料　│　從資料集到成果，含每一步的「為什麼」</p>
+  </header>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#2b6cb0"></i>資料處理流程</span>
+    <span><i class="dot" style="background:#6b46c1"></i>VAE 模型核心</span>
+    <span><i class="dot" style="background:#1f9d6b"></i>評估與成果</span>
+    <span><i class="dot" style="background:#e6b94d"></i>誠實註記 / 限制</span>
+  </div>
+
+  <!-- 1 -->
+  <div class="stage"><div class="num">1</div>
+    <h3>資料載入　NASA CMAPSS FD001</h3>
+    <div class="what"><code>train_FD001</code>(20,631筆/100台引擎)、<code>test_FD001</code>、<code>RUL_FD001</code>。欄位=26：<code>unit_number</code>、<code>time_cycles</code>、<code>setting_1~3</code>、<code>s_1~s_21</code>。</div>
+    <div class="why"><b>為什麼：</b>FD001 對應「高壓壓縮機(HPC)」單一故障模式，變因單純、適合驗證方法。每台引擎從健康跑到故障，是天然的退化資料。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 2 -->
+  <div class="stage"><div class="num">2</div>
+    <h3>資料健檢</h3>
+    <div class="what">檢查 shape、缺失值、<code>describe</code> 統計 → 結果：<b>無缺失值</b>；各感測器尺度差異大、非常態。</div>
+    <div class="why"><b>為什麼：</b>進模型前的 sanity check。先確認資料乾淨，並發現「尺度不一」這個問題 → 決定後面要做標準化。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 3 -->
+  <div class="stage"><div class="num">3</div>
+    <h3>建立標籤　RUL（剩餘壽命）</h3>
+    <div class="what"><code>RUL = 該引擎最大週期 − 當前週期</code></div>
+    <div class="why"><b>為什麼：</b>原始資料沒有「還能撐多久」這個答案，必須自己算。用每台引擎自己的最大週期回推，得到每個時間點的剩餘壽命。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 4 -->
+  <div class="stage"><div class="num">4</div>
+    <h3>探索式分析 EDA</h3>
+    <div class="what">(a) 引擎壽命分佈（多數 190~210 週期故障）　(b) 相關係數熱圖　(c) 感測器 vs RUL 趨勢圖　(d) 箱型圖看分佈/離群。</div>
+    <div class="why"><b>為什麼：</b>要先「認識資料」才能做對的特徵選擇。這步直接發現 <code>s1,5,6,10,16,18,19</code> 從頭到尾是常數。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 5 -->
+  <div class="stage"><div class="num">5</div>
+    <h3>特徵清理／選擇</h3>
+    <div class="what">剔除：7 個常數感測器 + index 欄 + 3 個 operating settings + RUL（當 y）。</div>
+    <div class="why"><b>為什麼：</b>①常數感測器標準差≈0，對預測零貢獻、徒增維度雜訊；②index/settings 不是機況訊號；③只留真正反映引擎健康的感測器。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 6 -->
+  <div class="stage"><div class="num">6</div>
+    <h3>切分資料</h3>
+    <div class="what"><code>train_test_split(X, y, test_size=0.3)</code> → 訓練集 / 驗證集。</div>
+    <div class="why"><b>為什麼：</b>留一部分驗證集評估泛化能力，避免只看訓練表現自我感覺良好。</div>
+    <div class="note"><b>誠實註記：</b>測試集每台引擎只取「最後一個週期」（<code>groupby.last()</code>），因為 <code>RUL_FD001</code> 給的是每台引擎最後狀態的剩餘壽命。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 7 -->
+  <div class="stage"><div class="num">7</div>
+    <h3>標準化　MinMaxScaler</h3>
+    <div class="what"><code>fit(訓練集)</code> → <code>transform(驗證/測試)</code>，把所有感測器壓到 0~1。</div>
+    <div class="why"><b>為什麼：</b>①感測器尺度差很大（如轉速 9000 vs 比值 0.03），不縮放會讓大數值主導；②神經網路在 0~1 範圍收斂更穩。<br><b>關鍵：</b>scaler 只用訓練集 fit → 防止測試集資訊洩漏。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 8 -->
+  <div class="stage"><div class="num">8</div>
+    <h3>轉 Tensor + DataLoader</h3>
+    <div class="what"><code>batch_size=32</code>、<code>shuffle=True</code>。</div>
+    <div class="why"><b>為什麼：</b>PyTorch 用張量運算；分批訓練省記憶體、梯度更穩；shuffle 打散順序，避免模型學到資料排列。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 9 CORE -->
+  <div class="stage core"><div class="num">9</div>
+    <h3>建構 VAE 模型　🧠 核心</h3>
+    <div class="what">
+      <b>Encoder：</b><code>21 →(Linear+ReLU)→ 64 →</code> 分岔成 <code>μ(2維)</code> 與 <code>logvar(2維)</code><br>
+      <b>Reparameterize：</b><code>z = μ + ε·σ</code>　(ε ~ N(0,1))<br>
+      <b>Decoder：</b><code>2 →(Linear+ReLU)→ 64 → 21</code>（重建）
+    </div>
+    <div class="why">
+      <b>為什麼用 VAE：</b>①非線性降維（贏 PCA）；②KL 讓潛在空間平滑可量距離（贏普通 AE）；③非監督、不需大量故障標籤（贏監督回歸）。<br>
+      <b>為什麼 latent=2：</b>為了視覺化退化軌跡 + 可解釋；代價是資訊損失（準確率有上限）。<br>
+      <b>為什麼 reparameterize：</b>讓「隨機抽樣」可做反向傳播（梯度能流過 μ、σ）。
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 10 CORE -->
+  <div class="stage core"><div class="num">10</div>
+    <h3>損失函數</h3>
+    <div class="what"><code>Loss = 重建誤差(MSE) + KL散度 × 0.0001</code></div>
+    <div class="why"><b>為什麼兩項：</b>MSE 逼模型「還原得準」＝抓住真實訊號；KL 逼編碼分佈趨近 N(0,1)＝規範潛在空間、防止死背。<br>
+      <b>為什麼權重 0.0001：</b>讓「重建準確」優先、KL 當輔助。權重太大→重建變差/退化；太小→失去規範化。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 11 CORE -->
+  <div class="stage core"><div class="num">11</div>
+    <h3>訓練</h3>
+    <div class="what"><code>Adam(lr=0.001)</code>、<code>50 epochs</code>。</div>
+    <div class="why"><b>為什麼：</b>Adam 自適應學習率、收斂快又穩；50 epochs 讓 loss 收斂。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 12 CORE -->
+  <div class="stage core"><div class="num">12</div>
+    <h3>產生潛在表徵 (Embedding)</h3>
+    <div class="what"><code>encode</code> → 取 <code>μ</code> 當每台引擎的特徵向量。</div>
+    <div class="why"><b>為什麼用 μ 不用抽樣的 z：</b>μ 是分佈中心，比隨機抽樣「穩定、可重現」，當特徵向量更可靠。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 13 BRANCH -->
+  <div class="splitlabel">— 兩條應用分支 —</div>
+  <div class="branch">
+    <div class="stage"><div class="num" style="background:#1f9d6b">13A</div>
+      <h3 style="font-size:16px">視覺化退化軌跡</h3>
+      <div class="what">2D 散點，顏色 = RUL，畫出 <b>健康(綠) → 故障(紅)</b> 的退化路徑。</div>
+      <div class="why" style="background:var(--green-bg)"><b style="color:var(--green)">為什麼：</b>證明 VAE「無監督」就自己學到退化方向，也方便對非技術者解釋。</div>
+    </div>
+    <div class="stage"><div class="num" style="background:#6b46c1">13B</div>
+      <h3 style="font-size:16px">健康分類（最近鄰 / 少樣本）</h3>
+      <div class="what">support set = 訓練集 embedding，標籤由 RUL 分位數(0.33) 切「健康/危險」。測試點 → 找潛在空間最近範本 → 借標籤。</div>
+      <div class="why" style="background:var(--purple-bg)"><b style="color:var(--purple)">為什麼最近鄰：</b>健康聚一團、退化離群，距離天然反映健康程度、省標籤。</div>
+      <div class="note"><b>誠實：</b>門檻 0.33 是統計切法，非物理依據；更嚴謹可用 piecewise-linear RUL（上限約 125）。</div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 14 -->
+  <div class="stage result"><div class="num">14</div>
+    <h3>模型評估</h3>
+    <div class="what">混淆矩陣 + <code>Accuracy / Precision / Recall / F1</code> + 距離分佈圖。</div>
+    <div class="why"><b>為什麼看 Recall：</b>漏報一台要壞的引擎（沒預警 → 空中故障）代價最高，所以重視「抓到要壞的比例」勝過單純準確率。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 15 -->
+  <div class="stage result"><div class="num">15</div>
+    <h3>成果</h3>
+    <div class="what">
+      ✅ <b>實測：</b>健康/故障在潛在空間清楚分離；分類指標（混淆矩陣）。<br>
+      ✅ <b>視覺：</b>可解釋的退化軌跡圖。
+    </div>
+    <div class="note"><b>推估（非實測）：</b>「84% 成本↓ / 36% 故障風險↓」是用商業價值換算的<b>估算</b>，依賴與 baseline 的對照數字 → 面試務必說是「推估」，不可講成模型實測。</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- 16 商業數字白話拆解 -->
+  <div class="stage result" style="border-left-color:#c77a00; background:linear-gradient(180deg,#fffaf0,#fff);">
+    <div class="num" style="background:#c77a00; box-shadow:0 4px 10px rgba(199,122,0,.4);">$</div>
+    <h3>商業數字怎麼算的？（想像 100 個，一看就懂）</h3>
+    <div class="what" style="margin-bottom:4px;">兩個數字的關鍵都一樣 —— <b>只看「壞的那部分」縮小了多少</b>。</div>
+    <div class="branch" style="margin-top:12px;">
+      <div style="flex:1; background:var(--green-bg); border-radius:11px; padding:14px 16px; border:1px solid #bfe8d4;">
+        <div style="font-size:15px; font-weight:800; color:var(--green); margin-bottom:6px;">🟢 84% ＝ 省下的「無效維修」</div>
+        <div style="font-size:13.4px; color:#1f4636;">
+          來自 <b>Precision 75% → 96%</b>（喊你換的零件裡，幾個真的該換）<br><br>
+          模型每喊 <b>100 次</b>「要換」：<br>
+          • 舊：75 個該換，<b>25 個白換</b><br>
+          • 新：96 個該換，<b>只剩 4 個白換</b><br><br>
+          白換 <b>25 → 4</b>，浪費消掉 <b>21/25 ≈ 84%</b>。
+        </div>
+      </div>
+      <div style="flex:1; background:#fdeceb; border-radius:11px; padding:14px 16px; border:1px solid #f3c4be;">
+        <div style="font-size:15px; font-weight:800; color:#c0392b; margin-bottom:6px;">🔴 36% ＝ 降低的「故障風險」</div>
+        <div style="font-size:13.4px; color:#5a201a;">
+          來自 <b>Recall 70% → 81%</b>（真的會壞的，幾台被提前抓到）<br><br>
+          有 <b>100 台</b>快壞的引擎：<br>
+          • 舊：抓到 70 台，<b>漏掉 30 台</b><br>
+          • 新：抓到 81 台，<b>只漏 19 台</b><br><br>
+          漏抓 <b>30 → 19</b>，風險消掉 <b>11/30 ≈ 36%</b>。
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:13px;"><b>誠實講法：</b>「假設 Precision、Recall 有這樣的提升，換算下來就是少 84% 無效維修、少 36% 故障風險。這組提升是跟一個 baseline 版本對照來的、非嚴格控制變因實驗，所以屬於<b>合理推估</b>。」</div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <h2>🧭 一句話串起整條邏輯</h2>
+    <div class="chain">
+      算出 <b>RUL 標籤</b> → EDA 砍掉沒用的<b>常數感測器</b> → <b>標準化</b> →
+      用 <b>VAE</b> 把 21 維壓成 2 維<b>健康表徵</b> → 健康的聚一團、退化的離群 →
+      用<b>距離</b>判斷健康並畫出<b>退化軌跡</b> → 用<b>混淆矩陣</b>評估、特別看 <b>Recall</b>。
+    </div>
+    <h2 style="margin-top:22px">📌 三個最常被追問的「為什麼」</h2>
+    <div class="qa">
+      <div><b>Q：為什麼砍常數感測器？</b>　標準差≈0、零資訊、徒增維度雜訊。</div>
+      <div><b>Q：為什麼 VAE 要 KL 散度？</b>　規範潛在空間使其平滑，距離才能拿來判斷健康。</div>
+      <div><b>Q：為什麼 latent=2？</b>　為可視化退化軌跡，是「可解釋性 vs 準確率」的取捨，非極限。</div>
+    </div>
+  </div>
+
+  <footer>Landy Huang · 半導體設備預測維護 AI 演算法 · 面試準備用</footer>
+</div>
+</body>
+</html>

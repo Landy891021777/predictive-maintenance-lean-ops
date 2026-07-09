@@ -1,0 +1,12 @@
+# 核心模型與資料處理
+torch
+numpy
+pandas
+scikit-learn
+matplotlib
+
+# MCP server
+mcp
+
+# Excel / 資料產生（VBA 階段的模擬資料產生腳本用）
+openpyxl
