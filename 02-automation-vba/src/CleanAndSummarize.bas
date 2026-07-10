@@ -427,17 +427,35 @@ Private Function CleanNumber(ByVal s As String) As Double
     CleanNumber = Val(Replace(Trim$(s), ",", ""))
 End Function
 
-' Locate the sample-data folder; fall back to a folder picker
+' Locate the folder of SAP_EXPORT_*.csv to process.
+' The data ships in two scenarios (see README): sample-data\lifecycle (default)
+' and sample-data\snapshot. Ask the user which to run; fall back to a picker.
 Private Function GetSampleDataFolder() As String
-    Dim guess As String
-    guess = ThisWorkbook.Path & "\sample-data"
-    If Len(Dir(guess, vbDirectory)) > 0 Then
-        GetSampleDataFolder = guess
-        Exit Function
+    Dim lifecycle As String, snapshot As String
+    lifecycle = ThisWorkbook.Path & "\sample-data\lifecycle"
+    snapshot = ThisWorkbook.Path & "\sample-data\snapshot"
+
+    If Len(Dir(lifecycle, vbDirectory)) > 0 Then
+        Dim ans As VbMsgBoxResult
+        ans = MsgBox("Process the LIFECYCLE dataset (~13,750 rows)?" & vbCrLf & vbCrLf & _
+                     "Yes = lifecycle   |   No = snapshot (~315 rows)   |   Cancel = pick a folder", _
+                     vbYesNoCancel + vbQuestion, "Choose dataset")
+        If ans = vbYes Then
+            GetSampleDataFolder = lifecycle
+            Exit Function
+        ElseIf ans = vbNo And Len(Dir(snapshot, vbDirectory)) > 0 Then
+            GetSampleDataFolder = snapshot
+            Exit Function
+        ElseIf ans = vbCancel Then
+            ' fall through to picker
+        Else
+            GetSampleDataFolder = snapshot   ' No, but snapshot missing -> try anyway
+            Exit Function
+        End If
     End If
 
     With Application.FileDialog(msoFileDialogFolderPicker)
-        .Title = "Select the sample-data folder containing SAP_EXPORT_*.csv"
+        .Title = "Select a folder containing SAP_EXPORT_*.csv"
         If .Show = -1 Then GetSampleDataFolder = .SelectedItems(1)
     End With
 End Function
