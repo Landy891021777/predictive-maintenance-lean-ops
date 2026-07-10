@@ -2,7 +2,7 @@ Attribute VB_Name = "CleanAndSummarize"
 '==============================================================================
 ' Module : CleanAndSummarize
 ' Purpose: Replace the manual workflow of "download SAP export -> clean in Excel
-'          -> summarize by hand" for the equipment health reporting process.
+'          -> summarize by hand" for the daily engine health report.
 '
 ' ASML JD mapping:
 '   "use macro to replace manual download from SAP, manual summary in excel"
@@ -10,22 +10,30 @@ Attribute VB_Name = "CleanAndSummarize"
 ' Lean waste eliminated:
 '   Motion         -> no repeated importing, copy-pasting, window switching
 '   Overprocessing -> cleaning and summary rules standardized, not redone daily
-'   Defects        -> removes human error when fixing dirty data by hand
-'                     (e.g. forgetting to TRIM equipment IDs splits one machine
-'                      into two rows in a pivot table)
+'   Defects        -> removes silent human error. Two examples in this data:
+'                     (a) forgetting to TRIM equipment IDs splits one machine
+'                         into two pivot rows
+'                     (b) "Warning" vs "warning" vs "WARNING" splits the KPI
+'                         into three categories and undercounts alerts
 '
-' Data source:
-'   sample-data/SAP_EXPORT_*.csv, derived from the real NASA CMAPSS FD001
-'   dataset (100 engines, 12 key sensors, HealthScore from true RUL).
-'   See README.md for which fields are real and which are simulated.
+' Position in the pipeline:
+'   01-core-model/scoring/score_engines.py  (VAE model scores every reading)
+'        -> outputs/model_predictions.csv   (the "system output")
+'        -> sample-data/SAP_EXPORT_*.csv    (dirty daily export, simulated)
+'        -> THIS MACRO                      (clean + summarize)
+'        -> Power Automate / Power BI        (distribute + visualize)
 '
-' Input layout (semicolon separated, 20 columns, 0-based index):
+' The export contains the MODEL'S PREDICTION only. Ground-truth remaining useful
+' life never appears here -- in reality the failure has not happened yet.
+'
+' Input layout (semicolon separated, 22 columns, 0-based index):
 '   00 ExportDate   01 EquipmentID  02 Cycle       03 Timestamp
 '   04..15 Sensor_2,3,4,7,8,9,11,12,13,14,15,17
-'   16 HealthScore  17 AnomalyFlag  18 WorkOrder   19 MaintenanceCost
+'   16 LatentZ1     17 LatentZ2     18 NearestDistance
+'   19 PredictedStatus              20 WorkOrder   21 MaintenanceCost
 '
 ' Benefit measurement:
-'   This macro records its own runtime with Timer and writes it to Summary!B8.
+'   This macro records its own runtime with Timer and writes it to Summary!B9.
 '   That value is the measured (green) input for 06-lean-lss/roi-validation.xlsx.
 '
 ' NOTE: Comments and message strings are ASCII-only on purpose. The VBA editor
@@ -41,7 +49,7 @@ Option Explicit
 
 Private Const DELIM As String = ";"     ' SAP exports commonly use semicolons,
                                         ' so thousand separators do not split fields
-Private Const COL_COUNT As Long = 20
+Private Const COL_COUNT As Long = 22
 
 ' 0-based column indexes into the split line
 Private Const IX_DATE As Long = 0
@@ -50,10 +58,15 @@ Private Const IX_CYCLE As Long = 2
 Private Const IX_TS As Long = 3
 Private Const IX_SENSOR_FIRST As Long = 4
 Private Const IX_SENSOR_LAST As Long = 15
-Private Const IX_HEALTH As Long = 16
-Private Const IX_ANOMALY As Long = 17
-Private Const IX_WO As Long = 18
-Private Const IX_COST As Long = 19
+Private Const IX_Z1 As Long = 16
+Private Const IX_Z2 As Long = 17
+Private Const IX_DIST As Long = 18
+Private Const IX_STATUS As Long = 19
+Private Const IX_WO As Long = 20
+Private Const IX_COST As Long = 21
+
+Private Const STATUS_WARNING As String = "Warning"
+Private Const STATUS_HEALTHY As String = "Healthy"
 
 '------------------------------------------------------------------------------
 ' Main entry point
@@ -73,8 +86,8 @@ Public Sub CleanAndSummarize()
     Dim seen As Object: Set seen = CreateObject("Scripting.Dictionary")
     Dim cleanRows As Collection: Set cleanRows = New Collection
 
-    Dim rowsRead As Long, dupRemoved As Long, missingHealth As Long, missingCost As Long
-    Dim fileCount As Long
+    Dim rowsRead As Long, dupRemoved As Long, missingDist As Long, missingCost As Long
+    Dim statusFixed As Long, fileCount As Long
 
     ' Read every CSV in sample-data (eliminates Motion: no manual file opening)
     Dim fileName As String
@@ -82,7 +95,7 @@ Public Sub CleanAndSummarize()
     Do While fileName <> ""
         fileCount = fileCount + 1
         ProcessOneFile folderPath & "\" & fileName, seen, cleanRows, _
-                       rowsRead, dupRemoved, missingHealth, missingCost
+                       rowsRead, dupRemoved, missingDist, missingCost, statusFixed
         fileName = Dir
     Loop
 
@@ -94,8 +107,10 @@ Public Sub CleanAndSummarize()
         Exit Sub
     End If
 
+    Dim totalWarnings As Long
     WriteCleanSheet cleanRows
-    WriteSummarySheet cleanRows, rowsRead, dupRemoved, missingHealth, missingCost, fileCount
+    WriteSummarySheet cleanRows, rowsRead, dupRemoved, missingDist, missingCost, _
+                      statusFixed, fileCount, totalWarnings
 
     Application.Calculation = xlCalculationAutomatic
     Application.DisplayAlerts = True
@@ -105,15 +120,17 @@ Public Sub CleanAndSummarize()
     elapsed = Timer - startTime                          ' benefit measurement: end
 
     ' Write the measured runtime back so the ROI model can reference it
-    ThisWorkbook.Worksheets("Summary").Range("B8").Value = Round(elapsed, 3)
+    ThisWorkbook.Worksheets("Summary").Range("B9").Value = Round(elapsed, 3)
 
     MsgBox "Automation complete." & vbCrLf & vbCrLf & _
-           "Files read             : " & fileCount & vbCrLf & _
-           "Raw rows read          : " & rowsRead & vbCrLf & _
-           "Duplicate rows removed : " & dupRemoved & vbCrLf & _
-           "Clean rows             : " & cleanRows.Count & vbCrLf & _
-           "Missing HealthScore    : " & missingHealth & vbCrLf & _
-           "Missing MaintenanceCost: " & missingCost & vbCrLf & vbCrLf & _
+           "Files read              : " & fileCount & vbCrLf & _
+           "Raw rows read           : " & rowsRead & vbCrLf & _
+           "Duplicate rows removed  : " & dupRemoved & vbCrLf & _
+           "Clean rows              : " & cleanRows.Count & vbCrLf & _
+           "Status case normalized  : " & statusFixed & vbCrLf & _
+           "Total WARNING readings  : " & totalWarnings & vbCrLf & _
+           "Missing NearestDistance : " & missingDist & vbCrLf & _
+           "Missing MaintenanceCost : " & missingCost & vbCrLf & vbCrLf & _
            "ELAPSED: " & Format(elapsed, "0.000") & " seconds" & vbCrLf & _
            "(Record this number in README.md)", _
            vbInformation, "CleanAndSummarize"
@@ -125,16 +142,17 @@ End Sub
 Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
                            ByRef cleanRows As Collection, _
                            ByRef rowsRead As Long, ByRef dupRemoved As Long, _
-                           ByRef missingHealth As Long, ByRef missingCost As Long)
+                           ByRef missingDist As Long, ByRef missingCost As Long, _
+                           ByRef statusFixed As Long)
     Dim ff As Integer: ff = FreeFile
     Dim line As String
     Dim isHeader As Boolean: isHeader = True
     Dim parts() As String
     Dim exportDate As Date
     Dim okDate As Boolean
-    Dim equipID As String
-    Dim healthTxt As String, costTxt As String
-    Dim healthVal As Variant, costVal As Variant
+    Dim equipID As String, rawStatus As String, status As String
+    Dim distTxt As String, costTxt As String
+    Dim distVal As Variant, costVal As Variant
     Dim key As String
     Dim rec(0 To COL_COUNT - 1) As Variant
     Dim j As Long
@@ -153,22 +171,14 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
                 okDate = NormalizeDate(parts(IX_DATE), exportDate)
                 equipID = UCase$(Trim$(parts(IX_EQUIP)))  ' trim spaces + unify case
 
-                healthTxt = Trim$(parts(IX_HEALTH))
+                rawStatus = Trim$(parts(IX_STATUS))
+                status = NormalizeStatus(rawStatus)
+
+                distTxt = Trim$(parts(IX_DIST))
                 costTxt = Trim$(parts(IX_COST))
-
-                If Len(healthTxt) = 0 Then
-                    healthVal = ""
-                    missingHealth = missingHealth + 1
-                Else
-                    healthVal = Val(healthTxt)
-                End If
-
-                If Len(costTxt) = 0 Then
-                    costVal = ""
-                    missingCost = missingCost + 1
-                Else
-                    costVal = CleanNumber(costTxt)       ' strip thousand separators
-                End If
+                distVal = IIf(Len(distTxt) = 0, "", Val(distTxt))
+                ' CleanNumber strips thousand separators
+                costVal = IIf(Len(costTxt) = 0, "", CleanNumber(costTxt))
 
                 If okDate Then
                     ' de-duplicate on date|equipment|cycle|timestamp|work order
@@ -180,6 +190,13 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
                         dupRemoved = dupRemoved + 1
                     Else
                         seen.Add key, 1
+
+                        ' Count data-quality issues on kept rows only, so that
+                        ' duplicates do not inflate the figures.
+                        If status <> rawStatus Then statusFixed = statusFixed + 1
+                        If distVal = "" Then missingDist = missingDist + 1
+                        If costVal = "" Then missingCost = missingCost + 1
+
                         rec(IX_DATE) = exportDate
                         rec(IX_EQUIP) = equipID
                         rec(IX_CYCLE) = CLng(Val(parts(IX_CYCLE)))
@@ -187,8 +204,10 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
                         For j = IX_SENSOR_FIRST To IX_SENSOR_LAST
                             rec(j) = Val(Trim$(parts(j)))  ' Val is locale-independent
                         Next j
-                        rec(IX_HEALTH) = healthVal
-                        rec(IX_ANOMALY) = CLng(Val(parts(IX_ANOMALY)))
+                        rec(IX_Z1) = Val(Trim$(parts(IX_Z1)))
+                        rec(IX_Z2) = Val(Trim$(parts(IX_Z2)))
+                        rec(IX_DIST) = distVal
+                        rec(IX_STATUS) = status
                         rec(IX_WO) = Trim$(parts(IX_WO))
                         rec(IX_COST) = costVal
                         cleanRows.Add rec
@@ -201,7 +220,7 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
 End Sub
 
 '------------------------------------------------------------------------------
-' Write the "CleanData" worksheet (all 20 cleaned columns)
+' Write the "CleanData" worksheet (all 22 cleaned columns)
 '------------------------------------------------------------------------------
 Private Sub WriteCleanSheet(ByRef cleanRows As Collection)
     Dim ws As Worksheet: Set ws = GetOrCreateSheet("CleanData")
@@ -211,7 +230,8 @@ Private Sub WriteCleanSheet(ByRef cleanRows As Collection)
     hdr = Array("ExportDate", "EquipmentID", "Cycle", "Timestamp", _
                 "Sensor_2", "Sensor_3", "Sensor_4", "Sensor_7", "Sensor_8", "Sensor_9", _
                 "Sensor_11", "Sensor_12", "Sensor_13", "Sensor_14", "Sensor_15", "Sensor_17", _
-                "HealthScore", "AnomalyFlag", "WorkOrder", "MaintenanceCost")
+                "LatentZ1", "LatentZ2", "NearestDistance", "PredictedStatus", _
+                "WorkOrder", "MaintenanceCost")
     ws.Range("A1").Resize(1, COL_COUNT).Value = hdr
     ws.Range("A1").Resize(1, COL_COUNT).Font.Bold = True
 
@@ -231,9 +251,9 @@ Private Sub WriteCleanSheet(ByRef cleanRows As Collection)
 
     ws.Range("A2").Resize(cleanRows.Count, COL_COUNT).Value = data
     ws.Columns("A").NumberFormat = "yyyy-mm-dd"
-    ws.Columns("T").NumberFormat = "#,##0.00"
-    ' No AutoFit here: on 20k+ rows it costs seconds and would distort the
-    ' runtime measurement, which is about automation, not cosmetics.
+    ws.Columns("V").NumberFormat = "#,##0.00"
+    ' No AutoFit on the data body: on 13k+ rows it costs seconds and would
+    ' distort the runtime measurement, which is about automation, not cosmetics.
     ws.Rows(1).AutoFit
 End Sub
 
@@ -242,23 +262,13 @@ End Sub
 '------------------------------------------------------------------------------
 Private Sub WriteSummarySheet(ByRef cleanRows As Collection, _
                               ByVal rowsRead As Long, ByVal dupRemoved As Long, _
-                              ByVal missingHealth As Long, ByVal missingCost As Long, _
-                              ByVal fileCount As Long)
+                              ByVal missingDist As Long, ByVal missingCost As Long, _
+                              ByVal statusFixed As Long, ByVal fileCount As Long, _
+                              ByRef totalWarnings As Long)
     Dim ws As Worksheet: Set ws = GetOrCreateSheet("Summary")
     ws.Cells.Clear
 
-    ' --- Block 1: run log (measured values consumed by the ROI model) ---
-    ws.Range("A1").Value = "Automation run log (measured)"
-    ws.Range("A1").Font.Bold = True
-    ws.Range("A2").Value = "Files read":              ws.Range("B2").Value = fileCount
-    ws.Range("A3").Value = "Raw rows read":           ws.Range("B3").Value = rowsRead
-    ws.Range("A4").Value = "Duplicate rows removed":  ws.Range("B4").Value = dupRemoved
-    ws.Range("A5").Value = "Clean rows":              ws.Range("B5").Value = cleanRows.Count
-    ws.Range("A6").Value = "Missing HealthScore":     ws.Range("B6").Value = missingHealth
-    ws.Range("A7").Value = "Missing MaintenanceCost": ws.Range("B7").Value = missingCost
-    ws.Range("A8").Value = "Elapsed seconds":         ws.Range("B8").Value = 0  ' filled by caller
-
-    ' --- Block 2: per-equipment aggregation ---
+    ' --- Block 2 first: aggregate so we can report the warning total up top ---
     Dim agg As Object: Set agg = CreateObject("Scripting.Dictionary")
 
     Dim i As Long
@@ -269,49 +279,69 @@ Private Sub WriteSummarySheet(ByRef cleanRows As Collection, _
         eid = rec(IX_EQUIP)
 
         If Not agg.Exists(eid) Then
-            ' 0:rows  1:health sum  2:health count  3:anomalies  4:cost sum
+            ' 0:rows  1:warnings  2:dist sum  3:dist count  4:cost sum
             agg.Add eid, Array(0#, 0#, 0#, 0#, 0#)
         End If
 
         a = agg(eid)
         a(0) = a(0) + 1
-        If rec(IX_HEALTH) <> "" Then
-            a(1) = a(1) + rec(IX_HEALTH)
-            a(2) = a(2) + 1
+        If rec(IX_STATUS) = STATUS_WARNING Then a(1) = a(1) + 1
+        If rec(IX_DIST) <> "" Then
+            a(2) = a(2) + rec(IX_DIST)
+            a(3) = a(3) + 1
         End If
-        a(3) = a(3) + rec(IX_ANOMALY)
         If rec(IX_COST) <> "" Then a(4) = a(4) + rec(IX_COST)
         agg(eid) = a
     Next i
 
-    Dim r As Long: r = 11
+    totalWarnings = 0
+    Dim keys As Variant: keys = agg.keys
+    Dim k As Long
+    For k = LBound(keys) To UBound(keys)
+        totalWarnings = totalWarnings + agg(keys(k))(1)
+    Next k
+
+    ' --- Block 1: run log (measured values consumed by the ROI model) ---
+    ws.Range("A1").Value = "Automation run log (measured)"
+    ws.Range("A1").Font.Bold = True
+    ws.Range("A2").Value = "Files read":               ws.Range("B2").Value = fileCount
+    ws.Range("A3").Value = "Raw rows read":            ws.Range("B3").Value = rowsRead
+    ws.Range("A4").Value = "Duplicate rows removed":   ws.Range("B4").Value = dupRemoved
+    ws.Range("A5").Value = "Clean rows":               ws.Range("B5").Value = cleanRows.Count
+    ws.Range("A6").Value = "Status case normalized":   ws.Range("B6").Value = statusFixed
+    ws.Range("A7").Value = "Total WARNING readings":   ws.Range("B7").Value = totalWarnings
+    ws.Range("A8").Value = "Missing NearestDistance":  ws.Range("B8").Value = missingDist
+    ws.Range("A9").Value = "Elapsed seconds":          ws.Range("B9").Value = 0  ' filled by caller
+    ws.Range("A10").Value = "Missing MaintenanceCost": ws.Range("B10").Value = missingCost
+
+    ' --- Block 2 output: sorted per-equipment table ---
+    SortStrings keys
+
+    Dim r As Long: r = 13
     ws.Cells(r - 1, 1).Value = "Per-equipment summary"
     ws.Cells(r - 1, 1).Font.Bold = True
     ws.Range(ws.Cells(r, 1), ws.Cells(r, 6)).Value = _
-        Array("EquipmentID", "Records", "Avg HealthScore", "Anomalies", "Anomaly Rate", "Total Cost")
+        Array("EquipmentID", "Readings", "Warnings", "Warning Rate", _
+              "Avg NearestDistance", "Total Cost")
     ws.Range(ws.Cells(r, 1), ws.Cells(r, 6)).Font.Bold = True
 
-    ' Sort equipment IDs so the report is stable and readable
-    Dim keys As Variant: keys = agg.keys
-    SortStrings keys
-
-    Dim k As Long
+    Dim firstDataRow As Long: firstDataRow = r + 1
     Dim v As Variant
     For k = LBound(keys) To UBound(keys)
         v = agg(keys(k))
         r = r + 1
         ws.Cells(r, 1).Value = keys(k)
         ws.Cells(r, 2).Value = v(0)
-        ws.Cells(r, 3).Value = IIf(v(2) > 0, v(1) / v(2), "")
-        ws.Cells(r, 4).Value = v(3)
-        ws.Cells(r, 5).Value = IIf(v(0) > 0, v(3) / v(0), "")
+        ws.Cells(r, 3).Value = v(1)
+        ws.Cells(r, 4).Value = IIf(v(0) > 0, v(1) / v(0), "")
+        ws.Cells(r, 5).Value = IIf(v(3) > 0, v(2) / v(3), "")
         ws.Cells(r, 6).Value = v(4)
     Next k
 
-    If r >= 12 Then
-        ws.Range(ws.Cells(12, 3), ws.Cells(r, 3)).NumberFormat = "0.000"
-        ws.Range(ws.Cells(12, 5), ws.Cells(r, 5)).NumberFormat = "0.0%"
-        ws.Range(ws.Cells(12, 6), ws.Cells(r, 6)).NumberFormat = "#,##0.00"
+    If r >= firstDataRow Then
+        ws.Range(ws.Cells(firstDataRow, 4), ws.Cells(r, 4)).NumberFormat = "0.0%"
+        ws.Range(ws.Cells(firstDataRow, 5), ws.Cells(r, 5)).NumberFormat = "0.000000"
+        ws.Range(ws.Cells(firstDataRow, 6), ws.Cells(r, 6)).NumberFormat = "#,##0.00"
     End If
     ws.Columns("A:F").AutoFit
     ws.Activate
@@ -320,6 +350,16 @@ End Sub
 '==============================================================================
 ' Helper functions
 '==============================================================================
+
+' Unify PredictedStatus casing. "warning"/"WARNING" -> "Warning".
+' Without this, a pivot table silently splits the KPI into several categories.
+Private Function NormalizeStatus(ByVal s As String) As String
+    Select Case UCase$(Trim$(s))
+        Case "WARNING": NormalizeStatus = STATUS_WARNING
+        Case "HEALTHY": NormalizeStatus = STATUS_HEALTHY
+        Case Else:      NormalizeStatus = Trim$(s)
+    End Select
+End Function
 
 ' Simple insertion sort for a 0-based Variant array of strings
 Private Sub SortStrings(ByRef arr As Variant)

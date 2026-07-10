@@ -1,39 +1,39 @@
 """
-從真實的 NASA CMAPSS FD001 「測試集」產生模擬「SAP 匯出」的設備感測/工單檔（含刻意的髒資料）。
+把 VAE 模型的判讀結果，包裝成模擬「每日 SAP 匯出檔」（含刻意的髒資料）。
 
-=== 為何用 test 集而非 train 集？ ===
-train_FD001 中每台引擎都「跑到故障為止」，若以 RUL<=30 定義異常，
-每台引擎必然剛好有 31 筆異常 —— 該欄位在儀表板上毫無比較價值。
-
-test_FD001 的每台引擎是在故障前的隨機時間點被截斷，
-搭配 RUL_FD001（各引擎在最後一個 cycle 的真實剩餘壽命），
-正好對應真實情境：「當前艦隊快照 —— 100 台機台處在不同的壽命階段」。
-少數逼近故障、多數健康，異常數自然分佈，儀表板才有預警價值。
-
-RUL 計算（CMAPSS 標準做法）：
-    該列 RUL = (該引擎在測試集的最大 cycle - 當前 cycle) + RUL_FD001[該引擎]
+=== 這一步在整條資料流的位置 ===
+    01-core-model/scoring/score_engines.py
+        → outputs/model_predictions.csv      （系統每日輸出：逐筆讀數的模型判讀）
+              ↓  本腳本
+        → sample-data/SAP_EXPORT_*.csv       （模擬從 SAP 匯出的髒檔案）
+              ↓  [VBA] CleanAndSummarize
+        → 依機台彙總的警告報表
 
 === 資料誠信說明 ===
-真實（來自 NASA CMAPSS test_FD001.txt + RUL_FD001.txt）：
-  - EquipmentID   : 100 台引擎的真實 unit 編號（ENG-001 ~ ENG-100）
-  - Cycle         : 真實運轉週期
-  - Sensor_*      : 12 個關鍵感測器的真實量測值
-                    （對齊本專案的特徵選擇：sensor 2,3,4,7,8,9,11,12,13,14,15,17）
-  - HealthScore   : 由真實 RUL 推導 = min(RUL, 125) / 125
-  - AnomalyFlag   : 由真實 RUL 判定 = 1 if RUL <= 30
+真實（來自 NASA CMAPSS test_FD001 + 你的 VAE 模型）：
+  - EquipmentID      : 100 台引擎的真實 unit 編號
+  - Cycle            : 真實運轉週期
+  - Sensor_*（12 欄）: 真實感測器量測值
+  - LatentZ1 / LatentZ2 : VAE encoder 產生的真實 embedding 座標
+  - NearestDistance  : 到最近 support set 點的真實距離
+  - PredictedStatus  : 模型的真實判讀（Healthy / Warning）
 
-模擬（CMAPSS 資料集不含這些欄位，它們屬於 SAP/ERP 側）：
-  - ExportDate    : 每台引擎的 cycle 依時序切成 3 天批次匯出
-                    （故每個匯出檔都含全部 100 台，且異常隨時間遞增）
-  - Timestamp     : 由 Cycle 推導的時間戳
-  - WorkOrder     : 工單號
-  - MaintenanceCost : 維護成本（與異常狀態相關）
+模擬（SAP/ERP 側的欄位，CMAPSS 不含）：
+  - ExportDate       : 每台引擎的 cycle 依時序切成 3 天批次匯出
+  - Timestamp        : 由 Cycle 推導
+  - WorkOrder        : 工單號
+  - MaintenanceCost  : 維護成本（與判讀結果相關）
+
+**本檔案不含任何來自 RUL_FD001 的真實答案。** 真實剩餘壽命只出現在
+01-core-model/outputs/model_validation.csv，僅用於驗證模型準確率。
+理由：現實中故障尚未發生，系統不可能知道引擎還剩幾個週期。
 
 刻意加入的髒資料（模擬真實 SAP 匯出的品質問題）：
   - EquipmentID 前後空白（15%）、小寫（10%）
   - ExportDate 三種格式混用
+  - PredictedStatus 大小寫不一致（15%）  ← 會讓人工樞紐把 Warning/warning 拆成兩類
   - MaintenanceCost 千分位逗號、缺值（7%）
-  - HealthScore 缺值（5%）
+  - NearestDistance 缺值（3%）
   - 重複列（每檔約 5%）
 
 格式：分號(;)分隔 —— SAP 匯出常見格式，且可讓千分位逗號不破壞欄位。
@@ -42,89 +42,31 @@ RUL 計算（CMAPSS 標準做法）：
 輸出：SAP_EXPORT_<日期>.csv  x 3
 """
 
+from __future__ import annotations
+
 import csv
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import pandas as pd
+
 random.seed(42)  # 固定亂數，讓結果可重現
 
-OUT_DIR = Path(__file__).parent
-NASA_DIR = Path(r"C:\Users\User\Desktop\kaggle 專案\nasa專案")
-TEST_FILE = NASA_DIR / "test_FD001.txt"
-RUL_FILE = NASA_DIR / "RUL_FD001.txt"
+OUT_DIR = Path(__file__).resolve().parent
+PRED_FILE = OUT_DIR.parent.parent / "01-core-model" / "outputs" / "model_predictions.csv"
 
-# CMAPSS 欄位：1=unit, 2=cycle, 3-5=op settings, 6-26=sensor_1..sensor_21
 KEY_SENSORS = [2, 3, 4, 7, 8, 9, 11, 12, 13, 14, 15, 17]
-SENSOR_COLS = {s: 5 + s for s in KEY_SENSORS}  # sensor_k 位於第 (5+k) 欄（1-indexed）
-
-RUL_CAP = 125       # CMAPSS 文獻常用的分段線性 RUL 上限
-ANOMALY_RUL = 30    # RUL <= 30 視為異常（早期預警窗）
 N_EXPORT_DAYS = 3
+BASE_TS = datetime(2026, 1, 1)
 
 HEADER = (
     ["ExportDate", "EquipmentID", "Cycle", "Timestamp"]
     + [f"Sensor_{s}" for s in KEY_SENSORS]
-    + ["HealthScore", "AnomalyFlag", "WorkOrder", "MaintenanceCost"]
+    + ["LatentZ1", "LatentZ2", "NearestDistance", "PredictedStatus",
+       "WorkOrder", "MaintenanceCost"]
 )
-
-BASE_TS = datetime(2026, 1, 1)
-
-
-# ---------- 讀取真實資料 ----------
-
-def load_cmapss() -> list[dict]:
-    for f in (TEST_FILE, RUL_FILE):
-        if not f.exists():
-            raise FileNotFoundError(f"找不到 CMAPSS 原始檔：{f}")
-
-    # RUL_FD001 第 i 行 = 第 i 台引擎在最後一個 cycle 的真實剩餘壽命
-    with RUL_FILE.open(encoding="utf-8") as f:
-        rul_at_last = {i: int(line.split()[0]) for i, line in enumerate(f, start=1) if line.strip()}
-
-    rows: list[dict] = []
-    with TEST_FILE.open(encoding="utf-8") as f:
-        for line in f:
-            parts = line.split()
-            if len(parts) < 26:
-                continue
-            rows.append({
-                "unit": int(parts[0]),
-                "cycle": int(parts[1]),
-                "sensors": {s: float(parts[SENSOR_COLS[s] - 1]) for s in KEY_SENSORS},
-            })
-
-    max_cycle: dict[int, int] = defaultdict(int)
-    for r in rows:
-        max_cycle[r["unit"]] = max(max_cycle[r["unit"]], r["cycle"])
-
-    for r in rows:
-        # CMAPSS 標準 RUL 推導
-        rul = (max_cycle[r["unit"]] - r["cycle"]) + rul_at_last[r["unit"]]
-        r["rul"] = rul
-        r["health"] = min(rul, RUL_CAP) / RUL_CAP      # 真實退化 → 健康分數
-        r["anomaly"] = 1 if rul <= ANOMALY_RUL else 0  # 真實退化 → 異常標記
-
-    return rows
-
-
-def assign_export_days(rows: list[dict]) -> None:
-    """把每台引擎的 cycle 依時序切成 3 段，分配到 3 個匯出日。
-
-    這確保：(1) 每個匯出檔都含全部 100 台引擎；
-           (2) 異常隨匯出日遞增（真實退化趨勢）。
-    """
-    by_unit: dict[int, list[dict]] = defaultdict(list)
-    for r in rows:
-        by_unit[r["unit"]].append(r)
-
-    for unit_rows in by_unit.values():
-        unit_rows.sort(key=lambda r: r["cycle"])
-        n = len(unit_rows)
-        for i, r in enumerate(unit_rows):
-            # 前 1/3 → day 0，中 1/3 → day 1，後 1/3 → day 2
-            r["day"] = min(i * N_EXPORT_DAYS // n, N_EXPORT_DAYS - 1)
 
 
 # ---------- 髒資料製造器 ----------
@@ -143,42 +85,68 @@ def dirty_date(d: datetime) -> str:
     return d.strftime(random.choice(["%Y/%m/%d", "%d-%b-%Y", "%Y-%m-%d"]))
 
 
-def dirty_cost(anomaly: int) -> str:
+def dirty_status(status: str) -> str:
+    r = random.random()
+    if r < 0.10:
+        return status.lower()   # warning / healthy
+    if r < 0.15:
+        return status.upper()   # WARNING / HEALTHY
+    return status
+
+
+def dirty_cost(is_warning: bool) -> str:
     if random.random() < 0.07:
         return ""                                       # 缺值
-    value = random.uniform(800, 25000) if anomaly else random.uniform(50, 3000)
+    value = random.uniform(800, 25000) if is_warning else random.uniform(50, 3000)
     if random.random() < 0.4:
         return f"{value:,.2f}"                          # 千分位 1,234.56
     return f"{value:.2f}"
 
 
-def dirty_health(h: float) -> str:
-    return "" if random.random() < 0.05 else f"{h:.4f}"
+def dirty_distance(d: float) -> str:
+    return "" if random.random() < 0.03 else f"{d:.6f}"
 
 
-# ---------- 組裝輸出 ----------
+# ---------- 組裝 ----------
 
-def to_row(r: dict, export_day: datetime) -> list:
-    ts = BASE_TS + timedelta(hours=r["cycle"])
+def assign_export_days(df: pd.DataFrame) -> pd.DataFrame:
+    """把每台引擎的 cycle 依時序切成 3 段，分配到 3 個匯出日。
+
+    確保 (1) 每個匯出檔都含全部 100 台引擎；
+        (2) 警告隨時間遞增（引擎單調退化）。
+    """
+    df = df.sort_values(["unit_number", "time_cycles"]).copy()
+    days = []
+    for _, grp in df.groupby("unit_number", sort=False):
+        n = len(grp)
+        days.extend(min(i * N_EXPORT_DAYS // n, N_EXPORT_DAYS - 1) for i in range(n))
+    df["day"] = days
+    return df
+
+
+def to_row(r, export_day: datetime) -> list:
+    ts = BASE_TS + timedelta(hours=int(r.time_cycles))
+    is_warning = r.PredictedStatus == "Warning"
     return [
         dirty_date(export_day),
-        dirty_equipment_id(r["unit"]),
-        r["cycle"],
+        dirty_equipment_id(int(r.unit_number)),
+        int(r.time_cycles),
         ts.strftime("%Y-%m-%d %H:%M:%S"),
-        *[f"{r['sensors'][s]:.4f}" for s in KEY_SENSORS],
-        dirty_health(r["health"]),
-        r["anomaly"],
+        *[f"{getattr(r, f'Sensor_{s}'):.4f}" for s in KEY_SENSORS],
+        f"{r.LatentZ1:.6f}",
+        f"{r.LatentZ2:.6f}",
+        dirty_distance(r.NearestDistance),
+        dirty_status(r.PredictedStatus),
         f"WO{random.randint(100000, 999999)}",
-        dirty_cost(r["anomaly"]),
+        dirty_cost(is_warning),
     ]
 
 
-def build_file(records: list[dict], export_day: datetime) -> tuple[Path, int, int, int, int]:
-    rows = [to_row(r, export_day) for r in records]
-    units = len({r["unit"] for r in records})
-    anomalies = sum(r["anomaly"] for r in records)
+def build_file(chunk: pd.DataFrame, export_day: datetime):
+    rows = [to_row(r, export_day) for r in chunk.itertuples(index=False)]
+    units = chunk["unit_number"].nunique()
+    warnings = int((chunk["PredictedStatus"] == "Warning").sum())
 
-    # 製造髒資料：隨機複製約 5% 的列成為重複列
     n_dup = int(len(rows) * 0.05)
     rows.extend(list(random.choice(rows)) for _ in range(n_dup))
     random.shuffle(rows)
@@ -188,24 +156,29 @@ def build_file(records: list[dict], export_day: datetime) -> tuple[Path, int, in
         w = csv.writer(f, delimiter=";")
         w.writerow(HEADER)
         w.writerows(rows)
-    return path, len(rows), n_dup, units, anomalies
+    return path, len(rows), n_dup, units, warnings
 
 
 def main() -> None:
-    records = load_cmapss()
-    assign_export_days(records)
+    if not PRED_FILE.exists():
+        raise FileNotFoundError(
+            f"找不到模型結果表：{PRED_FILE}\n"
+            "請先執行 01-core-model/scoring/score_engines.py"
+        )
 
-    units = len({r["unit"] for r in records})
-    print(f"讀入真實 CMAPSS 測試集：{len(records)} 列、{units} 台引擎、{len(KEY_SENSORS)} 個感測器")
+    preds = pd.read_csv(PRED_FILE, encoding="utf-8-sig")
+    preds = assign_export_days(preds)
+    print(f"讀入模型判讀結果：{len(preds)} 筆、{preds['unit_number'].nunique()} 台引擎、"
+          f"{(preds['PredictedStatus'] == 'Warning').sum()} 筆 Warning")
 
     base = datetime(2026, 7, 1)
     total_rows = total_dup = 0
     for d in range(N_EXPORT_DAYS):
-        chunk = [r for r in records if r["day"] == d]
-        path, nrows, ndup, u, anom = build_file(chunk, base + timedelta(days=d))
+        chunk = preds[preds["day"] == d]
+        path, nrows, ndup, units, warns = build_file(chunk, base + timedelta(days=d))
         total_rows += nrows
         total_dup += ndup
-        print(f"  {path.name}: {nrows} 列（{ndup} 重複）, {u} 台引擎, {anom} 筆異常")
+        print(f"  {path.name}: {nrows} 列（{ndup} 重複）, {units} 台引擎, {warns} 筆 Warning")
 
     print(f"合計：{total_rows} 原始列 → 去重後應為 {total_rows - total_dup} 列")
 

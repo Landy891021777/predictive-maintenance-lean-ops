@@ -19,11 +19,32 @@
 
 ---
 
+## 🔄 資料流（一條龍）
+
+```
+NASA CMAPSS 真實感測資料
+        ↓
+[01] VAE 模型逐筆判讀健康狀態  ──→  Accuracy 85.0%、Warning Recall 93.9%（實測）
+        ↓
+   model_predictions.csv          「系統每日輸出」：13,096 筆 Healthy/Warning
+        ↓  包裝成髒的每日 SAP 匯出檔
+[02] VBA 巨集：清理 → 去重 → 依機台彙總警告數
+        ↓
+[03] Power Automate 自動寄報表    [05] Power BI 儀表板    [04] Power Apps 現場查詢
+        ↓
+[06] ROI 效益驗證（實測🟢 / 假設🟡 分列）
+```
+
+> 模型的**判讀結果**是自動化流程的輸入。真實剩餘壽命（答案）只用來驗證模型準不準，
+> 不會出現在匯出檔裡——因為現實中故障還沒發生，系統不可能知道答案。
+
+---
+
 ## 🗂 專案結構（分階段）
 
 | 資料夾 | 內容 | 對應 JD 關鍵字 |
 |--------|------|---------------|
-| [`01-core-model/`](01-core-model/) | VAE 預測維護核心（notebook、MCP server、說明） | Data mining, predictive model |
+| [`01-core-model/`](01-core-model/) | VAE 模型判讀 + 評分腳本 + 驗證報告 | Data mining, predictive model |
 | [`02-automation-vba/`](02-automation-vba/) | VBA 巨集：清理模擬 SAP 匯出 → 自動彙整報表 | VBA, replace manual Excel |
 | [`03-rpa-power-automate/`](03-rpa-power-automate/) | Power Automate Desktop：RPA 自動下載+寄報表 | PowerAutomate, replace manual SAP download/email |
 | [`04-powerapps-design/`](04-powerapps-design/) | 現場查詢 App 線框圖 + 畫面規格 | PowerAPPS, solutions developer |
