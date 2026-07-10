@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="680" viewBox="0 0 380 680" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="380" height="680" fill="#f4f5f7" stroke="#c9ced6"/>
+  <!-- App bar -->
+  <rect width="380" height="56" fill="#1f4e78"/>
+  <text x="20" y="34" fill="#fff" font-size="17" font-weight="bold">即時健康查詢</text>
+  <!-- Intro -->
+  <text x="16" y="82" fill="#6b7280" font-size="12">輸入現場感測讀數，即時取得模型判讀</text>
+  <!-- Engine picker -->
+  <text x="16" y="110" fill="#374151" font-size="12">機台</text>
+  <rect x="16" y="118" width="348" height="38" rx="6" fill="#fff" stroke="#c9ced6"/>
+  <text x="30" y="142" fill="#111" font-size="13">ENG-034 ▾</text>
+  <!-- key sensor inputs (subset for field use) -->
+  <g font-size="12">
+    <text x="16" y="180" fill="#374151">關鍵感測讀數（其餘自帶預設）</text>
+    <rect x="16" y="190" width="168" height="52" rx="6" fill="#fff" stroke="#c9ced6"/>
+    <text x="28" y="210" fill="#6b7280" font-size="11">Sensor_4</text>
+    <text x="28" y="230" fill="#111" font-size="15">1400.6</text>
+    <rect x="196" y="190" width="168" height="52" rx="6" fill="#fff" stroke="#c9ced6"/>
+    <text x="208" y="210" fill="#6b7280" font-size="11">Sensor_11</text>
+    <text x="208" y="230" fill="#111" font-size="15">47.5</text>
+    <rect x="16" y="250" width="168" height="52" rx="6" fill="#fff" stroke="#c9ced6"/>
+    <text x="28" y="270" fill="#6b7280" font-size="11">Sensor_14</text>
+    <text x="28" y="290" fill="#111" font-size="15">8138.6</text>
+    <rect x="196" y="250" width="168" height="52" rx="6" fill="#fff" stroke="#c9ced6"/>
+    <text x="208" y="270" fill="#6b7280" font-size="11">Sensor_15</text>
+    <text x="208" y="290" fill="#111" font-size="15">8.41</text>
+  </g>
+  <!-- Run button -->
+  <rect x="16" y="316" width="348" height="46" rx="8" fill="#1f4e78"/>
+  <text x="190" y="345" fill="#fff" font-size="14" text-anchor="middle" font-weight="bold">▶ 執行模型判讀</text>
+  <!-- Result card -->
+  <rect x="16" y="378" width="348" height="150" rx="8" fill="#fdecea" stroke="#c0392b"/>
+  <text x="30" y="404" fill="#6b7280" font-size="12">判讀結果</text>
+  <circle cx="46" cy="440" r="16" fill="#c0392b"/>
+  <text x="46" y="446" fill="#fff" font-size="15" text-anchor="middle" font-weight="bold">!</text>
+  <text x="74" y="436" fill="#c0392b" font-size="22" font-weight="bold">Warning</text>
+  <text x="74" y="458" fill="#7a2a20" font-size="12">1-NN 最近樣本標籤：High-risk（快壞）</text>
+  <line x1="30" y1="476" x2="350" y2="476" stroke="#f0c9c4"/>
+  <text x="30" y="500" fill="#374151" font-size="12">潛空間座標 z = (−1.00, 1.79)</text>
+  <text x="30" y="518" fill="#374151" font-size="12">建議：安排檢查並通知物料端</text>
+  <!-- data source note -->
+  <rect x="16" y="544" width="348" height="60" rx="8" fill="#eef2f7" stroke="#c9ced6"/>
+  <text x="30" y="566" fill="#374151" font-size="11" font-weight="bold">資料來源</text>
+  <text x="30" y="584" fill="#6b7280" font-size="10.5">App → 自訂連接器 → VAE 推論 API → 回傳 Healthy/Warning</text>
+  <text x="30" y="598" fill="#6b7280" font-size="10.5">（本階段為設計稿；個人帳號未實際部署）</text>
+  <!-- Bottom nav -->
+  <rect x="0" y="624" width="380" height="56" fill="#fff" stroke="#c9ced6"/>
+  <text x="63" y="656" fill="#9aa2ad" font-size="12" text-anchor="middle">■ 總覽</text>
+  <text x="190" y="656" fill="#1f4e78" font-size="12" text-anchor="middle" font-weight="bold">◐ 查詢</text>
+  <text x="317" y="656" fill="#9aa2ad" font-size="12" text-anchor="middle">↻ 趨勢</text>
+</svg>
