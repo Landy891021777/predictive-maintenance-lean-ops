@@ -11,6 +11,18 @@ Attribute VB_Name = "CleanAndSummarize"
 '   Motion         -> no repeated importing, copy-pasting, window switching
 '   Overprocessing -> cleaning and summary rules standardized, not redone daily
 '   Defects        -> removes human error when fixing dirty data by hand
+'                     (e.g. forgetting to TRIM equipment IDs splits one machine
+'                      into two rows in a pivot table)
+'
+' Data source:
+'   sample-data/SAP_EXPORT_*.csv, derived from the real NASA CMAPSS FD001
+'   dataset (100 engines, 12 key sensors, HealthScore from true RUL).
+'   See README.md for which fields are real and which are simulated.
+'
+' Input layout (semicolon separated, 20 columns, 0-based index):
+'   00 ExportDate   01 EquipmentID  02 Cycle       03 Timestamp
+'   04..15 Sensor_2,3,4,7,8,9,11,12,13,14,15,17
+'   16 HealthScore  17 AnomalyFlag  18 WorkOrder   19 MaintenanceCost
 '
 ' Benefit measurement:
 '   This macro records its own runtime with Timer and writes it to Summary!B8.
@@ -21,16 +33,27 @@ Attribute VB_Name = "CleanAndSummarize"
 '       would be corrupted. Chinese documentation lives in README.md.
 '
 ' Usage:
-'   1. Import this file into the VBA editor (Alt+F11 -> File -> Import File)
-'   2. Save the workbook as .xlsm inside the 02-automation-vba\ folder
-'      (the macro locates the sample-data subfolder relative to the workbook)
+'   1. Save the workbook as .xlsm inside the 02-automation-vba\ folder
+'   2. Import this file into the VBA editor (Alt+F11 -> File -> Import File)
 '   3. Run CleanAndSummarize (Alt+F8)
 '==============================================================================
 Option Explicit
 
 Private Const DELIM As String = ";"     ' SAP exports commonly use semicolons,
                                         ' so thousand separators do not split fields
-Private Const COL_COUNT As Long = 12
+Private Const COL_COUNT As Long = 20
+
+' 0-based column indexes into the split line
+Private Const IX_DATE As Long = 0
+Private Const IX_EQUIP As Long = 1
+Private Const IX_CYCLE As Long = 2
+Private Const IX_TS As Long = 3
+Private Const IX_SENSOR_FIRST As Long = 4
+Private Const IX_SENSOR_LAST As Long = 15
+Private Const IX_HEALTH As Long = 16
+Private Const IX_ANOMALY As Long = 17
+Private Const IX_WO As Long = 18
+Private Const IX_COST As Long = 19
 
 '------------------------------------------------------------------------------
 ' Main entry point
@@ -45,6 +68,7 @@ Public Sub CleanAndSummarize()
 
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
+    Application.Calculation = xlCalculationManual
 
     Dim seen As Object: Set seen = CreateObject("Scripting.Dictionary")
     Dim cleanRows As Collection: Set cleanRows = New Collection
@@ -62,17 +86,19 @@ Public Sub CleanAndSummarize()
         fileName = Dir
     Loop
 
-    Application.DisplayAlerts = True
-    Application.ScreenUpdating = True
-
     If fileCount = 0 Then
+        Application.Calculation = xlCalculationAutomatic
+        Application.DisplayAlerts = True
+        Application.ScreenUpdating = True
         MsgBox "No .csv files found in:" & vbCrLf & folderPath, vbExclamation
         Exit Sub
     End If
 
-    Application.ScreenUpdating = False
     WriteCleanSheet cleanRows
     WriteSummarySheet cleanRows, rowsRead, dupRemoved, missingHealth, missingCost, fileCount
+
+    Application.Calculation = xlCalculationAutomatic
+    Application.DisplayAlerts = True
     Application.ScreenUpdating = True
 
     Dim elapsed As Double
@@ -82,11 +108,11 @@ Public Sub CleanAndSummarize()
     ThisWorkbook.Worksheets("Summary").Range("B8").Value = Round(elapsed, 3)
 
     MsgBox "Automation complete." & vbCrLf & vbCrLf & _
-           "Files read          : " & fileCount & vbCrLf & _
-           "Raw rows read       : " & rowsRead & vbCrLf & _
-           "Duplicate rows removed: " & dupRemoved & vbCrLf & _
-           "Clean rows          : " & cleanRows.Count & vbCrLf & _
-           "Missing HealthScore : " & missingHealth & vbCrLf & _
+           "Files read             : " & fileCount & vbCrLf & _
+           "Raw rows read          : " & rowsRead & vbCrLf & _
+           "Duplicate rows removed : " & dupRemoved & vbCrLf & _
+           "Clean rows             : " & cleanRows.Count & vbCrLf & _
+           "Missing HealthScore    : " & missingHealth & vbCrLf & _
            "Missing MaintenanceCost: " & missingCost & vbCrLf & vbCrLf & _
            "ELAPSED: " & Format(elapsed, "0.000") & " seconds" & vbCrLf & _
            "(Record this number in README.md)", _
@@ -110,7 +136,8 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
     Dim healthTxt As String, costTxt As String
     Dim healthVal As Variant, costVal As Variant
     Dim key As String
-    Dim rec(0 To 6) As Variant
+    Dim rec(0 To COL_COUNT - 1) As Variant
+    Dim j As Long
 
     Open filePath For Input As #ff
     Do Until EOF(ff)
@@ -123,17 +150,17 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
 
             If UBound(parts) = COL_COUNT - 1 Then
                 ' --- cleaning rules (eliminate Defects / Overprocessing) ---
-                okDate = NormalizeDate(parts(0), exportDate)
-                equipID = UCase$(Trim$(parts(1)))        ' trim spaces + unify case
+                okDate = NormalizeDate(parts(IX_DATE), exportDate)
+                equipID = UCase$(Trim$(parts(IX_EQUIP)))  ' trim spaces + unify case
 
-                healthTxt = Trim$(parts(8))
-                costTxt = Trim$(parts(11))
+                healthTxt = Trim$(parts(IX_HEALTH))
+                costTxt = Trim$(parts(IX_COST))
 
                 If Len(healthTxt) = 0 Then
                     healthVal = ""
                     missingHealth = missingHealth + 1
                 Else
-                    healthVal = CDbl(healthTxt)
+                    healthVal = Val(healthTxt)
                 End If
 
                 If Len(costTxt) = 0 Then
@@ -144,21 +171,26 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
                 End If
 
                 If okDate Then
-                    ' de-duplicate on date|equipment|timestamp|work order
+                    ' de-duplicate on date|equipment|cycle|timestamp|work order
                     key = Format$(exportDate, "yyyy-mm-dd") & "|" & equipID & "|" & _
-                          Trim$(parts(2)) & "|" & Trim$(parts(10))
+                          Trim$(parts(IX_CYCLE)) & "|" & Trim$(parts(IX_TS)) & "|" & _
+                          Trim$(parts(IX_WO))
 
                     If seen.Exists(key) Then
                         dupRemoved = dupRemoved + 1
                     Else
                         seen.Add key, 1
-                        rec(0) = exportDate
-                        rec(1) = equipID
-                        rec(2) = Trim$(parts(2))          ' Timestamp
-                        rec(3) = healthVal
-                        rec(4) = CLng(Val(Trim$(parts(9))))   ' AnomalyFlag
-                        rec(5) = Trim$(parts(10))         ' WorkOrder
-                        rec(6) = costVal
+                        rec(IX_DATE) = exportDate
+                        rec(IX_EQUIP) = equipID
+                        rec(IX_CYCLE) = CLng(Val(parts(IX_CYCLE)))
+                        rec(IX_TS) = Trim$(parts(IX_TS))
+                        For j = IX_SENSOR_FIRST To IX_SENSOR_LAST
+                            rec(j) = Val(Trim$(parts(j)))  ' Val is locale-independent
+                        Next j
+                        rec(IX_HEALTH) = healthVal
+                        rec(IX_ANOMALY) = CLng(Val(parts(IX_ANOMALY)))
+                        rec(IX_WO) = Trim$(parts(IX_WO))
+                        rec(IX_COST) = costVal
                         cleanRows.Add rec
                     End If
                 End If
@@ -169,36 +201,40 @@ Private Sub ProcessOneFile(ByVal filePath As String, ByRef seen As Object, _
 End Sub
 
 '------------------------------------------------------------------------------
-' Write the "CleanData" worksheet
+' Write the "CleanData" worksheet (all 20 cleaned columns)
 '------------------------------------------------------------------------------
 Private Sub WriteCleanSheet(ByRef cleanRows As Collection)
     Dim ws As Worksheet: Set ws = GetOrCreateSheet("CleanData")
     ws.Cells.Clear
 
     Dim hdr As Variant
-    hdr = Array("ExportDate", "EquipmentID", "Timestamp", "HealthScore", _
-                "AnomalyFlag", "WorkOrder", "MaintenanceCost")
-    ws.Range("A1").Resize(1, 7).Value = hdr
-    ws.Range("A1").Resize(1, 7).Font.Bold = True
+    hdr = Array("ExportDate", "EquipmentID", "Cycle", "Timestamp", _
+                "Sensor_2", "Sensor_3", "Sensor_4", "Sensor_7", "Sensor_8", "Sensor_9", _
+                "Sensor_11", "Sensor_12", "Sensor_13", "Sensor_14", "Sensor_15", "Sensor_17", _
+                "HealthScore", "AnomalyFlag", "WorkOrder", "MaintenanceCost")
+    ws.Range("A1").Resize(1, COL_COUNT).Value = hdr
+    ws.Range("A1").Resize(1, COL_COUNT).Font.Bold = True
 
     If cleanRows.Count = 0 Then Exit Sub
 
     Dim data() As Variant
-    ReDim data(1 To cleanRows.Count, 1 To 7)
+    ReDim data(1 To cleanRows.Count, 1 To COL_COUNT)
 
     Dim i As Long, j As Long
     Dim rec As Variant
     For i = 1 To cleanRows.Count
         rec = cleanRows(i)
-        For j = 0 To 6
+        For j = 0 To COL_COUNT - 1
             data(i, j + 1) = rec(j)
         Next j
     Next i
 
-    ws.Range("A2").Resize(cleanRows.Count, 7).Value = data
+    ws.Range("A2").Resize(cleanRows.Count, COL_COUNT).Value = data
     ws.Columns("A").NumberFormat = "yyyy-mm-dd"
-    ws.Columns("G").NumberFormat = "#,##0.00"
-    ws.Columns("A:G").AutoFit
+    ws.Columns("T").NumberFormat = "#,##0.00"
+    ' No AutoFit here: on 20k+ rows it costs seconds and would distort the
+    ' runtime measurement, which is about automation, not cosmetics.
+    ws.Rows(1).AutoFit
 End Sub
 
 '------------------------------------------------------------------------------
@@ -230,7 +266,7 @@ Private Sub WriteSummarySheet(ByRef cleanRows As Collection, _
     Dim eid As String
     For i = 1 To cleanRows.Count
         rec = cleanRows(i)
-        eid = rec(1)
+        eid = rec(IX_EQUIP)
 
         If Not agg.Exists(eid) Then
             ' 0:rows  1:health sum  2:health count  3:anomalies  4:cost sum
@@ -239,12 +275,12 @@ Private Sub WriteSummarySheet(ByRef cleanRows As Collection, _
 
         a = agg(eid)
         a(0) = a(0) + 1
-        If rec(3) <> "" Then
-            a(1) = a(1) + rec(3)
+        If rec(IX_HEALTH) <> "" Then
+            a(1) = a(1) + rec(IX_HEALTH)
             a(2) = a(2) + 1
         End If
-        a(3) = a(3) + rec(4)
-        If rec(6) <> "" Then a(4) = a(4) + rec(6)
+        a(3) = a(3) + rec(IX_ANOMALY)
+        If rec(IX_COST) <> "" Then a(4) = a(4) + rec(IX_COST)
         agg(eid) = a
     Next i
 
@@ -255,7 +291,10 @@ Private Sub WriteSummarySheet(ByRef cleanRows As Collection, _
         Array("EquipmentID", "Records", "Avg HealthScore", "Anomalies", "Anomaly Rate", "Total Cost")
     ws.Range(ws.Cells(r, 1), ws.Cells(r, 6)).Font.Bold = True
 
+    ' Sort equipment IDs so the report is stable and readable
     Dim keys As Variant: keys = agg.keys
+    SortStrings keys
+
     Dim k As Long
     Dim v As Variant
     For k = LBound(keys) To UBound(keys)
@@ -281,6 +320,22 @@ End Sub
 '==============================================================================
 ' Helper functions
 '==============================================================================
+
+' Simple insertion sort for a 0-based Variant array of strings
+Private Sub SortStrings(ByRef arr As Variant)
+    Dim i As Long, j As Long
+    Dim tmp As Variant
+    For i = LBound(arr) + 1 To UBound(arr)
+        tmp = arr(i)
+        j = i - 1
+        Do While j >= LBound(arr)
+            If arr(j) <= tmp Then Exit Do
+            arr(j + 1) = arr(j)
+            j = j - 1
+        Loop
+        arr(j + 1) = tmp
+    Next i
+End Sub
 
 ' Parse the three mixed date formats: yyyy/mm/dd, yyyy-mm-dd, dd-Mon-yyyy
 Private Function NormalizeDate(ByVal s As String, ByRef outDate As Date) As Boolean
@@ -329,7 +384,7 @@ End Function
 
 ' Strip thousand separators, then convert to a number
 Private Function CleanNumber(ByVal s As String) As Double
-    CleanNumber = CDbl(Replace(Trim$(s), ",", ""))
+    CleanNumber = Val(Replace(Trim$(s), ",", ""))
 End Function
 
 ' Locate the sample-data folder; fall back to a folder picker
