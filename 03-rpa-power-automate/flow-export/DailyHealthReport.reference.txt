@@ -1,0 +1,46 @@
+# DailyHealthReport — Power Automate Desktop 流程參考藍圖
+#
+# 這是「設計參考」，非官方匯出檔。你在 Power Automate Desktop 建好流程後，
+# 用「複製動作 → 貼成文字」的實際輸出取代本檔（或並存）。
+# 下列以接近 PAD 動作語法的偽碼表示每一步。
+
+SET RepoPath TO $'''C:\\Users\\User\\Desktop\\predictive-maintenance-lean-ops'''
+
+# --- 1. 取得待處理的 SAP 匯出檔 ---
+Folder.GetFiles Folder: $'''%RepoPath%\\02-automation-vba\\sample-data\\lifecycle''' ^
+    FileFilter: $'''SAP_EXPORT_*.csv''' IncludeSubfolders: False ^
+    Files=> Files
+
+# --- 2. 模擬「從 SAP 下載」：搬檔到 inbox ---
+LOOP FOREACH File IN Files
+    File.Copy Files: File ^
+        Destination: $'''%RepoPath%\\03-rpa-power-automate\\inbox''' ^
+        IfFileExists: Overwrite
+END
+
+# --- 3. 開啟含巨集的活頁簿 ---
+Excel.LaunchExcel.LaunchAndOpen Path: $'''%RepoPath%\\02-automation-vba\\CleanAndSummarize.xlsm''' ^
+    Visible: False ReadOnly: False Instance=> ExcelInstance
+
+# --- 4. 執行無對話框的巨集（RPA 專用進入點）---
+Excel.RunMacro Instance: ExcelInstance Macro: $'''CleanAndSummarizeSilent'''
+
+# --- 5. 關閉並儲存（巨集內已 ThisWorkbook.Save）---
+Excel.CloseExcel.CloseAndSave Instance: ExcelInstance
+
+# --- 6. 輸出當日報表到 outbox ---
+DateTime.GetCurrentDateTime.Local DateTimeFormat: DateOnly CurrentDateTime=> Today
+Text.FormatDateTime DateTime: Today Format: $'''yyyyMMdd''' FormattedDateTime=> Stamp
+File.Copy Files: $'''%RepoPath%\\02-automation-vba\\CleanAndSummarize.xlsm''' ^
+    Destination: $'''%RepoPath%\\03-rpa-power-automate\\outbox\\DailyHealthReport_%Stamp%.xlsm''' ^
+    IfFileExists: Overwrite
+
+# --- 7A. 自動寄出（需本機 Outlook）---
+Outlook.LaunchOutlook.Launch Instance=> OutlookInstance
+Outlook.SendEmail Instance: OutlookInstance Account: $'''%YourAccount%''' ^
+    SendTo: $'''manager@example.com''' Subject: $'''每日設備健康報表 %Stamp%''' ^
+    Body: $'''附件為今日 100 台引擎的健康彙總（模型判讀 + VBA 自動彙總）。''' ^
+    Attachments: $'''%RepoPath%\\03-rpa-power-automate\\outbox\\DailyHealthReport_%Stamp%.xlsm'''
+
+# --- 7B. 無 Outlook 時的替代：桌面通知 ---
+# Notifications.ShowDesktop Title: $'''報表完成''' Message: $'''DailyHealthReport 已產生於 outbox'''

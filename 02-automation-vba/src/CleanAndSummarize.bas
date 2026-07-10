@@ -69,15 +69,35 @@ Private Const STATUS_WARNING As String = "Warning"
 Private Const STATUS_HEALTHY As String = "Healthy"
 
 '------------------------------------------------------------------------------
-' Main entry point
+' Entry point 1: interactive (run by hand from Excel, Alt+F8)
 '------------------------------------------------------------------------------
 Public Sub CleanAndSummarize()
+    Dim folderPath As String
+    folderPath = GetSampleDataFolder()                  ' asks lifecycle / snapshot
+    If folderPath = "" Then Exit Sub
+    RunPipeline folderPath, True
+End Sub
+
+'------------------------------------------------------------------------------
+' Entry point 2: silent (called by Power Automate / RPA -- no dialogs)
+' Always processes the lifecycle dataset so the robot never blocks on a prompt.
+' Power Automate action: Excel > Run Excel macro > "CleanAndSummarizeSilent"
+'------------------------------------------------------------------------------
+Public Sub CleanAndSummarizeSilent()
+    Dim folderPath As String
+    folderPath = ThisWorkbook.Path & "\sample-data\lifecycle"
+    If Len(Dir(folderPath, vbDirectory)) = 0 Then
+        folderPath = ThisWorkbook.Path & "\sample-data"
+    End If
+    RunPipeline folderPath, False
+End Sub
+
+'------------------------------------------------------------------------------
+' Core pipeline. showDialogs=False suppresses the completion MsgBox for RPA.
+'------------------------------------------------------------------------------
+Private Sub RunPipeline(ByVal folderPath As String, ByVal showDialogs As Boolean)
     Dim startTime As Double
     startTime = Timer                                   ' benefit measurement: start
-
-    Dim folderPath As String
-    folderPath = GetSampleDataFolder()
-    If folderPath = "" Then Exit Sub
 
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
@@ -121,6 +141,13 @@ Public Sub CleanAndSummarize()
 
     ' Write the measured runtime back so the ROI model can reference it
     ThisWorkbook.Worksheets("Summary").Range("B9").Value = Round(elapsed, 3)
+
+    ' In silent mode (RPA), save the workbook so Power Automate can then email it,
+    ' and skip the blocking dialog.
+    If Not showDialogs Then
+        ThisWorkbook.Save
+        Exit Sub
+    End If
 
     MsgBox "Automation complete." & vbCrLf & vbCrLf & _
            "Files read              : " & fileCount & vbCrLf & _
