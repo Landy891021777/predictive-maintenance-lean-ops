@@ -89,8 +89,16 @@ Power Automate Desktop 的流程**必須在 GUI 裡手動建立**，無法用程
 
 ---
 
+## 實際採用版本（As-built）
+
+本次實作的流程為：**取檔 → 開 Excel → 跑 `CleanAndSummarizeSilent` → 關檔存檔 → 產出當日報表到 `outbox\DailyHealthReport_YYYYMMDD.xlsm` → 桌面通知**。
+
+已驗證：機器人觸發後，`CleanAndSummarize.xlsm` 的 `Summary` 分頁正確產生（Clean rows 13,096、Total WARNING 1,693、100 台彙總），且 `outbox` 出現當日報表檔。
+
+> **Email 步驟**：設計書保留了 Outlook / Gmail SMTP 兩種寄信方案（見下與 BUILD-GUIDE.md）。本次改採「**存檔 + 桌面通知**」達成同樣的「免手動寄送」效果——正式環境可再接 SMTP 或 Teams 推送。誠實說明：Outlook 桌面版接 Gmail 遇到自動探索問題，故未採用 Email 路線。
+
 ## 誠信說明
 
-- Power Automate Desktop 為 Windows 11 免費內建，個人帳號可用；本流程可真實執行。
+- Power Automate Desktop 為 Windows 11 免費內建，個人帳號可用；本流程**已實際執行並驗證**。
 - 「從 SAP 下載」以「從 lifecycle 資料夾複製檔案到 inbox」模擬——因為沒有真實 SAP 連線。真實環境會改用 SAP GUI Scripting 或 SAP 連接器，流程骨架相同。
-- Email 步驟需本機安裝 Outlook；若無，改用「存檔 + 通知」達到同樣的「免手動寄送」效果。
+- 分發採「存檔 + 桌面通知」；Email 為可選延伸（設計書已備）。
