@@ -82,10 +82,20 @@ ROI 模型（[`06-lean-lss/roi-validation.xlsx`](06-lean-lss/)）把假設做成
 ## 📌 進度
 
 - [x] P0 基礎建置（repo、核心模型、README）
-- [ ] P1 Lean 骨架（DMAIC、VSM）
-- [ ] P2 VBA 巨集
-- [ ] P3 RPA（Power Automate Desktop）
-- [ ] P4 Power Apps 設計稿
-- [ ] P5 Power BI 儀表板
-- [ ] P6 ROI 效益驗證
-- [ ] P7 收尾 + 面試小抄
+- [x] 01 核心模型評分（VAE 逐筆判讀，Accuracy 85% / Recall 93.9%）
+- [x] P1 Lean 骨架（DMAIC、VSM）
+- [x] P2 VBA 巨集（15 分鐘 → 1.6 秒，562×）
+- [x] P3 RPA（Power Automate Desktop，端到端已驗證）
+- [x] P4 Power Apps 設計稿（3 畫面線框圖）
+- [x] P5 Power BI 儀表板（HK 三層看板）
+- [x] P6 ROI 效益驗證（年省約 539 小時）
+- [x] P7 收尾（面試小抄）
+
+## 🔑 關鍵成果（實測🟢 / 假設🟡）
+
+| 指標 | 值 | 類型 |
+|------|-----|------|
+| 模型準確率 / 快故障召回 | 85.0% / 93.9% | 🟢 |
+| 手動→自動處理時間（13,096 列） | 15 分 → 1.6 秒（562×） | 🟢 |
+| 消除的靜默資料錯誤 | 去重 654 + 大小寫 2,001 筆 | 🟢 |
+| 年省工時 / 首年 ROI | ~539 小時 / ~1,248% | 🟡 假設可替換 |
