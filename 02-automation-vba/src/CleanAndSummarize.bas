@@ -86,7 +86,7 @@ End Sub
 Public Sub CleanAndSummarizeSilent()
     Dim folderPath As String
     folderPath = ThisWorkbook.Path & "\sample-data\lifecycle"
-    If Len(Dir(folderPath, vbDirectory)) = 0 Then
+    If Not FolderExists(folderPath) Then
         folderPath = ThisWorkbook.Path & "\sample-data"
     End If
     RunPipeline folderPath, False
@@ -462,7 +462,7 @@ Private Function GetSampleDataFolder() As String
     lifecycle = ThisWorkbook.Path & "\sample-data\lifecycle"
     snapshot = ThisWorkbook.Path & "\sample-data\snapshot"
 
-    If Len(Dir(lifecycle, vbDirectory)) > 0 Then
+    If FolderExists(lifecycle) Then
         Dim ans As VbMsgBoxResult
         ans = MsgBox("Process the LIFECYCLE dataset (~13,750 rows)?" & vbCrLf & vbCrLf & _
                      "Yes = lifecycle   |   No = snapshot (~315 rows)   |   Cancel = pick a folder", _
@@ -470,7 +470,7 @@ Private Function GetSampleDataFolder() As String
         If ans = vbYes Then
             GetSampleDataFolder = lifecycle
             Exit Function
-        ElseIf ans = vbNo And Len(Dir(snapshot, vbDirectory)) > 0 Then
+        ElseIf ans = vbNo And FolderExists(snapshot) Then
             GetSampleDataFolder = snapshot
             Exit Function
         ElseIf ans = vbCancel Then
@@ -485,6 +485,11 @@ Private Function GetSampleDataFolder() As String
         .Title = "Select a folder containing SAP_EXPORT_*.csv"
         If .Show = -1 Then GetSampleDataFolder = .SelectedItems(1)
     End With
+End Function
+
+' Robust folder-existence test (avoids Dir(vbDirectory) quirks)
+Private Function FolderExists(ByVal path As String) As Boolean
+    FolderExists = CreateObject("Scripting.FileSystemObject").FolderExists(path)
 End Function
 
 ' Get a worksheet by name, creating it if needed
