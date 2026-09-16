@@ -156,7 +156,21 @@ def main() -> None:
 
     # ---------- 7. meta：門檻、感測器統計、驗證指標 ----------
     raw_train_sensors = X.values
+    raw_test_sensors = test[SENSOR_NAMES].values
     const_mask = raw_train_sensors.std(axis=0) < 1e-9
+
+    def slider_bounds(i: int) -> tuple[float, float, float]:
+        """滑桿範圍取「訓練集 ∪ 測試集」的全距再加緩衝。
+
+        只用訓練集的 p01–p99 會讓少數退化讀數落在範圍外而被靜默截斷
+        （實測 6/275,016 個數值），截斷後餵給模型的就不是真實讀數了。
+        """
+        tr, te = raw_train_sensors[:, i], raw_test_sensors[:, i]
+        lo, hi = float(min(tr.min(), te.min())), float(max(tr.max(), te.max()))
+        span = float(np.percentile(tr, 99) - np.percentile(tr, 1))
+        pad = span * 0.15 if span > 0 else max(abs(lo) * 1e-4, 1e-3)
+        lo, hi = lo - pad, hi + pad
+        return lo, hi, max((hi - lo) / 400, 1e-6)
     meta = {
         "sensor_names": SENSOR_NAMES,
         "key_sensors": [f"s_{s}" for s in KEY_SENSORS],
@@ -175,6 +189,9 @@ def main() -> None:
                 "p50": float(np.percentile(raw_train_sensors[:, i], 50)),
                 "p99": float(np.percentile(raw_train_sensors[:, i], 99)),
                 "constant": bool(const_mask[i]),
+                "slider_min": slider_bounds(i)[0],
+                "slider_max": slider_bounds(i)[1],
+                "slider_step": slider_bounds(i)[2],
             }
             for i, name in enumerate(SENSOR_NAMES)
         },
