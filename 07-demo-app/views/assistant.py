@@ -9,7 +9,7 @@ import streamlit as st
 
 from core.assistant import (
     KIND_LABEL, MAX_CHARS, MAX_QUESTIONS, SUGGESTED, SYSTEM_PROMPT, TOP_K,
-    answer, cached_answer, load_faq,
+    answer, cached_answer, load_faq, pretty_citations,
 )
 from core.llm import EMBED_DIM, EMBED_MODEL, get_api_key
 from core.retrieval import CORPUS_DIR, Retriever
@@ -48,14 +48,14 @@ def _ask(q: str) -> None:
 
 def _render_answer(a) -> None:
     if a.mode in ("generated", "cached"):
-        st.markdown(a.text)
+        st.markdown(pretty_citations(a.text), unsafe_allow_html=True)
         if a.invalid_citations:
             st.error("⚠️ 回答引用了不在檢索結果中的出處："
                      + "、".join(a.invalid_citations) + "。這部分內容可能不可靠。")
     if a.note:
         st.caption(("ℹ️ " if a.mode != "retrieval_only" else "⚠️ ") + a.note)
 
-    how = "混合檢索（BM25 + 向量）" if a.retrieval == "hybrid" else "關鍵字檢索（BM25）"
+    how = "語意向量 + 代號比對" if a.retrieval in ("vector_id", "hybrid") else "關鍵字檢索（BM25，降級模式）"
     meta = [how, f"前 {len(a.hits)} 段"]
     if a.model:
         meta.append(f"生成模型 {a.model}")
@@ -148,16 +148,16 @@ def _how_tab(R: Retriever, key: str | None) -> None:
     st.markdown(f"""
 #### 一個問題進來之後發生什麼事
 
-1. **斷詞**：中文取字元二元組、英數保留完整詞；`eng 64`、`ENG64` 都會正規化成 `ENG-064`
-2. **關鍵字檢索（BM25）**：對 {len(R.chunks)} 個段落計分，機台代號、工單號這類精確字串靠它
-3. **語意檢索**：問題送 `{EMBED_MODEL}` 轉成 {EMBED_DIM} 維向量，與預先算好的段落向量比餘弦相似度
-4. **合併排序（Reciprocal Rank Fusion）**：兩邊的名次合併，取前 {TOP_K} 段
-5. **生成**：段落與問題依下方 system prompt 組成提示，交給 Gemini 回答
-6. **出處驗證**：程式檢查回答引用的每個 `[片段編號]` 是否真的在檢索結果中，捏造的出處會標紅
+1. **代號正規化**：`eng 64`、`ENG64`、`eng-64` 統一成 `ENG-064`
+2. **語意檢索**：問題送 `{EMBED_MODEL}` 轉成 {EMBED_DIM} 維向量，與預先算好的 {len(R.chunks)} 個段落向量比餘弦相似度
+3. **代號比對**：問題若提到機台代號，含該代號的段落優先排前面（純向量會把 ENG-006 和 ENG-056 搞混）
+4. **取前 {TOP_K} 段**，與問題依下方 system prompt 組成提示，交給 Gemini 回答
+5. **出處驗證**：程式檢查回答引用的每個 `[片段編號]` 是否真的在檢索結果中，捏造的出處會標紅
 
 #### 設計取捨
 - **段落向量離線算好**、隨 repo 部署；線上每題只呼叫一次 embedding，執行期幾乎零負擔
-- **降級路徑**：embedding 失敗 → 只用關鍵字檢索；生成失敗 → 直接列出原文段落。網頁不會因為 API 額度用完而壞掉
+- **為什麼不用混合檢索**：原本預期 BM25 + 向量合併會最好，評估結果不是（見下表）—— BM25 在這份語料上雜訊太多，合併後反而拉低排序
+- **降級路徑**：embedding 失敗 → 改用 BM25 關鍵字檢索；生成失敗 → 換下一個模型，全部失敗則直接列出原文段落。網頁不會因為 API 額度用完而壞掉
 - **防濫用**：每次瀏覽最多 {MAX_QUESTIONS} 題、每題 {MAX_CHARS} 字；建議問題使用預先產生的回答
 - **不裝額外套件**：Gemini 以標準庫 `urllib` 呼叫 REST API；中文斷詞不依賴 jieba
 """)
@@ -165,15 +165,23 @@ def _how_tab(R: Retriever, key: str | None) -> None:
     ev = _eval()
     if ev:
         st.markdown(f"#### 檢索品質評估（{ev['n_questions']} 題，🟢 實測）")
-        names = {"bm25": "只用關鍵字（BM25）", "vector": "只用語意向量", "hybrid": "混合（RRF）"}
+        names = {"bm25": "關鍵字（BM25）", "vector": "語意向量", "hybrid": "混合（BM25 + 向量，RRF）",
+                 "vector_id": "語意向量 + 代號比對 ← 線上使用"}
         table = pd.DataFrame([{
-            "檢索方式": names[m], "Hit@3": f"{ev[m]['hit@3']:.1%}",
+            "檢索方式": names[m], "Hit@1": f"{ev[m].get('hit@1', 0):.1%}", "Hit@3": f"{ev[m]['hit@3']:.1%}",
             "Hit@5": f"{ev[m]['hit@5']:.1%}", "MRR": f"{ev[m]['mrr']:.3f}",
-        } for m in ["bm25", "vector", "hybrid"] if m in ev])
+        } for m in ["bm25", "vector", "hybrid", "vector_id"] if m in ev])
         st.dataframe(table, hide_index=True, width="stretch")
+        kinds = ev.get("kinds", {})
         st.caption(
-            "題庫混合精確代號型（ENG-064）、換句話說型（不用文件原字詞）與概念型問題；"
-            "每題的正確段落依內容事先訂定，未依檢索結果回頭調整。Hit@3 = 前三名中至少有一段正確。"
+            "題型：" + "、".join(f"{k} {n} 題" for k, n in kinds.items()) + "。"
+            "Hit@1 = 第一名就是正確段落（生成模型最依賴第一名，最貼近回答品質）；"
+            "Hit@3 = 前三名中至少一段正確。每題的正確段落依內容事先訂定，未依檢索結果回頭調整。"
+        )
+        st.caption(
+            "⚠️ 限制：「機台代號」12 題是在發現純向量會混淆 ENG-006 / ENG-056 之後才加入題庫，"
+            "代號比對規則也是看到這個問題才設計的，因此這 12 題對「語意向量 + 代號比對」不算獨立驗證。"
+            "題庫共 36 題，規模小，名次差 1–2 題即會影響百分比。"
         )
 
     st.markdown("#### System prompt（Prompt Engineering）")
@@ -204,15 +212,15 @@ def render() -> None:
         metric_card("文件庫", f"{len(R.chunks)} 段",
                     f"{n_docs} 份文件；其中 {n_sim} 段為模擬現場文件", None)
     with c2:
-        if ev and "hybrid" in ev:
-            metric_card("檢索命中率 Hit@3", f"{ev['hybrid']['hit@3']:.0%}",
-                        f"混合檢索；只用關鍵字為 {ev['bm25']['hit@3']:.0%}", MEASURED)
+        if ev and "vector_id" in ev:
+            metric_card("檢索第一名命中率", f"{ev['vector_id']['hit@1']:.0%}",
+                        f"{ev['n_questions']} 題評估；只用關鍵字為 {ev['bm25']['hit@1']:.0%}", MEASURED)
         elif ev:
             metric_card("檢索命中率 Hit@3", f"{ev['bm25']['hit@3']:.0%}",
                         "關鍵字檢索（向量索引尚未建立）", MEASURED)
     with c3:
         if key and R.has_vectors:
-            status, note = "混合檢索 + 生成", "BM25 + gemini-embedding-2 + Gemini"
+            status, note = "語意檢索 + 生成", "gemini-embedding-2 + Gemini（BM25 為降級備援）"
         elif key:
             status, note = "關鍵字檢索 + 生成", "向量索引尚未建立"
         else:

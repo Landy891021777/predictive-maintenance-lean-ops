@@ -1,17 +1,24 @@
 """
-混合檢索：BM25 關鍵字檢索 + 向量檢索，以 Reciprocal Rank Fusion（RRF）合併排序。
+文件檢索。線上採用「語意向量 + 機台代號比對」，BM25 作為降級路徑。
 
-=== 為什麼這樣設計 ===
-- 向量已在建置時離線算好（assets/corpus/embeddings.npz），線上只對「使用者的問題」
-  呼叫一次 embedding API，執行期幾乎沒有負擔。
-- BM25 同時參與排序：機台代號（ENG-064）、工單號（MWO-2026-0045）、感測器編號
-  這類精確字串，關鍵字比對比語意向量可靠。
-- 降級路徑：embedding API 失敗（額度用完、斷線）時自動只用 BM25，網頁不會壞。
+=== 評估後的最終設計（build/rag_eval.py，36 題）===
+                 Hit@1   Hit@3   MRR
+  BM25           63.9%   88.9%   0.776
+  向量            94.4%   97.2%   0.961
+  混合 RRF       77.8%   94.4%   0.871
+  向量+代號比對   97.2%   97.2%   0.979   ← 線上使用
 
-=== 中文斷詞 ===
+原本預設混合檢索（BM25 + 向量以 RRF 合併）會最好，實測不是：BM25 在這份語料上
+雜訊多（問句含 Healthy / Warning 就被交接紀錄搶排名），合併後反而拉低向量的排序。
+但純向量會混淆長得像的機台代號（問 ENG-006 時把 ENG-056 排第一），因此加上規則：
+問題含 ENG-xxx 時，內文含該代號的段落優先。
+
+- 段落向量在建置時離線算好（assets/corpus/embeddings.npz），線上每題只呼叫一次 embedding
+- embedding 失敗（額度用完、斷線）時自動改用 BM25，網頁不會壞
+
+=== 中文斷詞（BM25 用）===
 不裝 jieba。中文取「字元二元組」（引擎健康 → 引擎、擎健、健康），
 英數保留完整詞並轉小寫（ENG-064 → eng-064；另拆出 064 以便只打數字也查得到）。
-零依賴，且對代號類查詢比分詞器穩定。
 """
 
 from __future__ import annotations
@@ -130,3 +137,25 @@ class Retriever:
 
         top = sorted(fused, key=lambda i: -fused[i])[:k]
         return [Hit(self.chunks[i], fused[i], bm_rank.get(i), vec_rank.get(i)) for i in top]
+
+    def search_vector(self, query: str, query_vector: list[float], k: int = 5) -> list[Hit]:
+        """語意向量排序，並對問題中明確提到的機台代號做精確比對優先。
+
+        評估發現純向量檢索整體最好，但會混淆長得像的代號（問 ENG-006 時把
+        ENG-056 排第一）。因此：問題含 ENG-xxx 時，內文含該代號的段落依向量
+        相似度排在最前面，其餘段落接在後面。這是依問題結構訂的規則，沒有針對
+        評估題庫調整參數。
+        """
+        q = np.asarray(query_vector, dtype=np.float32)
+        q /= np.linalg.norm(q)
+        sims = self.vectors @ q
+        order = list(np.argsort(-sims))
+        vec_rank = {i: r for r, i in enumerate(order)}
+
+        ids = set(re.findall(r"ENG-\d{3}", normalize_engine_ids(query)))
+        if ids:
+            pinned = [i for i in order if any(e in self.chunks[i]["text"] for e in ids)]
+            rest = [i for i in order if i not in set(pinned)]
+            order = pinned + rest
+
+        return [Hit(self.chunks[i], float(sims[i]), None, vec_rank[i]) for i in order[:k]]

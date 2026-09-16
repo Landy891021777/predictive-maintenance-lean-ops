@@ -1,0 +1,193 @@
+[
+ {
+  "question": "ENG-064 最後一筆讀數是 Healthy，為什麼工單還不能結案？",
+  "text": "依模擬的 SOP，單筆讀數恢復 Healthy 不可作為結案依據 [shift_logs-07]。\n\nENG-064 最新一筆讀數（cycle 168）雖判讀為 Healthy [shift_logs-07, work_orders-45]，但原因如下：\n1. 該引擎最近 10 筆讀數中仍有 8 筆 Warning [shift_logs-07]。\n2. 先前已觸發 L3 停機檢查工單 [shift_logs-07, work_orders-45]。\n\n依模擬 SOP，趨勢分級已觸發工單者仍需完成檢查，故必須維持原工單等級繼續檢查，不可直接結案 [shift_logs-07, work_orders-45]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "shift_logs-07",
+   "work_orders-45",
+   "model_card-05",
+   "shift_logs-08",
+   "work_orders-34"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   2,
+   73,
+   1,
+   3
+  ],
+  "cited": [
+   "shift_logs-07",
+   "work_orders-45"
+  ],
+  "invalid_citations": []
+ },
+ {
+  "question": "模型有哪些引擎沒抓到？原因是什麼？",
+  "text": "模型共有 2 台引擎未抓到（漏判），分別為 ENG-064 與 ENG-072 [model_card-05]，原因如下：\n\n1. **ENG-064**：最後 cycle 168，真實剩餘壽命 28 cycles。原因為真正的漏判，離分界線 24.7 個 cycle，讀數在潛空間中仍落在健康樣本附近 [model_card-05]。\n2. **ENG-072**：最後 cycle 131，真實剩餘壽命 50 cycles。原因為標籤邊界效應，只比分界線內側少 2.7 個 cycle，分位數稍微移動就不算錯 [model_card-05]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "sop-05",
+   "model_card-04",
+   "model_card-05",
+   "model_card-06",
+   "manual-06"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "model_card-05"
+  ],
+  "invalid_citations": []
+ },
+ {
+  "question": "L3 停機檢查要在多久內處理完？",
+  "text": "依模擬 SOP 規定，L3 停機檢查的處置時限為 24 小時內 [sop-04]，維修工程師需在 24 小時內完成檢查 [sop-06]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "sop-04",
+   "sop-03",
+   "sop-06",
+   "shift_logs-05",
+   "shift_logs-06"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "sop-04",
+   "sop-06"
+  ],
+  "invalid_citations": []
+ },
+ {
+  "question": "維護成本降低 84% 是怎麼算出來的？",
+  "text": "維護成本降低 84% 是透過 value-driver 公式進行的情境推估（非實測）[lean-06]。\n\n計算方式是比較「判為健康、其實在衰退」的漏判比例（`1 − Precision(Healthy)`）[lean-06]：\n* **公開基準**：Precision 為 75%，漏判比例為 25% [lean-06]。\n* **本專案 VAE**：Precision 實測為 96.4%（推導取整數 96%），漏判比例降至 4% [lean-06]。\n* **推導結果**：漏判比例從 25% 降至 4%，代表漏判率下降 84.0%，對應非計畫故障造成的維護成本降低 [lean-06]。\n\n但書限制：此數字為情境推估非實測；公開基準（3 分類）與本專案（2 分類）評估方式不同，且公開資料集沒有真實成本資料 [lean-06]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "lean-06",
+   "lean-05",
+   "lean-03",
+   "lean-01",
+   "lean-04"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "lean-06"
+  ],
+  "invalid_citations": []
+ },
+ {
+  "question": "用 Excel 手動整理報表可能會有什麼看不出來的錯？",
+  "text": "用 Excel 手動整理時，最大的風險是出錯時系統完全不會報錯且無任何錯誤訊息 [lean-04]。若未統一大小寫與去除空白（TRIM）即直接做樞紐分析，會產生以下隱蔽錯誤：\n\n1. 機台重複拆分：樞紐表出現 300 台機台（實際只有 100 台），前後有空白的機台代號會被當成另一台 [lean-04]。\n2. 狀態大小寫不一致：狀態欄出現 6 種寫法（HEALTHY、Healthy、WARNING、Warning、healthy、warning） [lean-04]。\n3. 關鍵數據漏算：Warning 只數到 1,496 筆（實際應為 1,693 筆），漏算代價可能導致引擎非計畫停機 [lean-04]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "lean-04",
+   "lean-02",
+   "lean-03",
+   "lean-07",
+   "model_card-05"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "lean-04"
+  ],
+  "invalid_citations": []
+ },
+ {
+  "question": "壓縮機快壞的時候，哪些感測器會有變化？",
+  "text": "依據模擬文件，高壓壓縮機（HPC）性能衰退或引擎接近故障時，主要感測器變化如下 [manual-07]：\n\n**讀數上升的感測器：**\n* Sensor 11（Ps30，高壓壓縮機出口靜壓）[manual-07][manual-03]\n* Sensor 4（T50）[manual-07][manual-02]\n* Sensor 15（BPR）[manual-07][manual-05]\n* Sensor 2（T24，低壓壓縮機出口總溫）[manual-07][manual-02]\n* Sensor 17（htBleed）[manual-07][manual-05]\n* Sensor 3（T30，高壓壓縮機出口總溫，中度上升）[manual-02]\n\n**讀數下降的感測器：**\n* Sensor 12（phi）[manual-07][manual-05]\n* Sensor 7（P30，高壓壓縮機出口總壓）[manual-07][manual-03]\n* Sensor 21（W32）與 Sensor 20（W31）[manual-07][manual-05]\n\n單一感測器偏離正常範圍不一定代表故障，應以模型綜合判讀與連續讀數趨勢為準 [manual-07]。",
+  "model": "gemini-3.6-flash",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "manual-07",
+   "manual-03",
+   "manual-02",
+   "manual-06",
+   "manual-05"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "manual-07",
+   "manual-03",
+   "manual-02",
+   "manual-05"
+  ],
+  "invalid_citations": []
+ }
+]

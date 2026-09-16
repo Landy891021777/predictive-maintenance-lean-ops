@@ -21,7 +21,7 @@ streamlit run 07-demo-app/app.py
 | 即時判讀 | 拉 21 顆感測器滑桿，當場看模型判 Healthy / Warning | `VAE-based fault-detection framework` |
 | 機隊軌跡 | 13,096 筆逐筆判讀、單台退化軌跡、被漏判的 2 台 | 早期異常偵測 |
 | 自動化 | 髒匯出檔 → 一鍵清理彙總 → 下載報表；與 Power Automate 實際產出逐項對照 | `Automated reporting via RPA/Power Automate` |
-| AI 助理 | 用自然語言問維修手冊與工單（P3） | `AI chatbot ... powered by RAG and an LLM API` |
+| AI 助理 | 用自然語言問維修手冊、SOP、工單、交接紀錄，回答逐句標出處 | `AI chatbot ... powered by RAG and an LLM API` |
 | 效益驗證 | 拉假設滑桿，看 84% / 36% / ROI 即時重算（P4） | 效益數字 |
 
 ---
@@ -105,3 +105,56 @@ py -3 07-demo-app/build/verify_cleaning.py   # 驗證清理邏輯與 RPA 實際�
 
 > **耗時有兩次實測**：Alt+F8 互動執行 1.6 秒（562×），經 Power Automate 無人值守執行 1.844 秒（488×）。
 > 兩者皆為真實量測，ROI 使用前者。網頁上 Python 重現的耗時不計入效益。
+
+---
+
+## AI 助理（RAG）
+
+### 文件庫（`build/build_corpus.py`，100 段、6 份文件）
+
+| 性質 | 文件 | 說明 |
+|---|---|---|
+| 🟡 模擬 | 維修手冊、異常處置 SOP、維修工單（61 張）、交接班紀錄 | CMAPSS 沒有這類文件；但其中的引擎編號、cycle、判讀結果、感測器範圍與退化方向**全部由真實資料計算**，且刻意不含真實剩餘壽命 |
+| 🟢 真實 | 模型卡、精實改善與效益 | 以最終數字重新整理。`06-lean-lss/DMAIC.md` 與 `value-stream-map.md` 為 P1 草稿，含過期假設，不直接收錄 |
+
+### 檢索：評估後選擇「語意向量 + 機台代號比對」（`build/rag_eval.py`，36 題）
+
+| 方式 | Hit@1 | Hit@3 | MRR |
+|---|---|---|---|
+| BM25 | 63.9% | 88.9% | 0.776 |
+| 語意向量（gemini-embedding-2） | 94.4% | 97.2% | 0.961 |
+| 混合（BM25 + 向量，RRF） | 77.8% | 94.4% | 0.871 |
+| **語意向量 + 代號比對（線上使用）** | **97.2%** | **97.2%** | **0.979** |
+
+原本預期混合檢索最好，實測不是：BM25 在這份語料雜訊多，合併後反而拉低排序。
+但純向量會混淆相似代號（問 ENG-006 時把 ENG-056 排第一），因此加上規則：問題含 ENG-xxx 時，含該代號的段落優先。
+
+> 限制：機台代號 12 題是發現上述混淆後才加入，對最終方法不算獨立驗證；題庫僅 36 題。
+
+### 生成與防護
+
+- Gemini 免費層，以標準庫 `urllib` 呼叫 REST API（不裝 SDK）。模型依序 `gemini-3.6-flash` → `gemini-3.1-flash-lite` → `gemini-3.5-flash`；404、429、5xx、逾時都會換下一個（免費額度按模型分開計算）
+- System prompt：僅依段落回答、逐句標出處、數字照抄、模擬文件須告知、**但書必須保留**、防 prompt injection、離題婉拒、只在問真實維修決策時加免責
+- **出處驗證**：回答引用的片段編號必須在檢索結果中，否則標紅
+- **降級**：embedding 失敗 → BM25；生成全部失敗 → 直接列出原文段落
+- **防濫用**：每次瀏覽 15 題、每題 200 字；6 個建議問題使用預先產生的回答（`build/build_faq.py`），面試當天額度用完仍可展示
+
+### 紅隊測試（`build/rag_redteam.py`，7 題，人工複核全數通過）
+
+文件外的事實、不存在的引擎（ENG-150）、prompt injection、離題（寫程式）、真實飛安決策、數字陷阱（36% 的精確值）、誘導捏造維修結果。
+
+### 金鑰
+
+本機：`.streamlit/secrets.toml`（已列入 `.gitignore`，範本見 `secrets.toml.example`）。
+雲端：Streamlit Cloud 後台 **Settings → Secrets** 貼上 `GEMINI_API_KEY = "..."`。
+未設定金鑰時，網站自動以「僅檢索」模式運作，建議問題仍顯示預先產生的回答。
+
+### 重建順序
+
+```bash
+py -3 07-demo-app/build/build_corpus.py   # 文件庫
+py -3 07-demo-app/build/embed_corpus.py   # 段落向量（需金鑰；免費層 embedding 每分鐘 100 次）
+py -3 07-demo-app/build/rag_eval.py       # 檢索評估
+py -3 07-demo-app/build/build_faq.py      # 建議問題的預存回答
+py -3 07-demo-app/build/rag_redteam.py    # 紅隊測試
+```

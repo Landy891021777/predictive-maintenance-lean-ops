@@ -1,8 +1,8 @@
 {
  "bm25": {
-  "hit@3": 0.8333333333333334,
-  "hit@5": 0.9166666666666666,
-  "mrr": 0.6636002886002886,
+  "hit@3": 0.8888888888888888,
+  "hit@5": 0.9444444444444444,
+  "mrr": 0.7757335257335257,
   "per_question": [
    {
     "q": "ENG-064 的工單現在是什麼狀態？",
@@ -321,8 +321,1617 @@
      "model_card-06",
      "sop-05"
     ]
+   },
+   {
+    "q": "ENG-046 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-21",
+     "shift_logs-04",
+     "shift_logs-06"
+    ],
+    "gold": [
+     "work_orders-21"
+    ]
+   },
+   {
+    "q": "ENG-006 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-10",
+     "shift_logs-02",
+     "sop-05"
+    ],
+    "gold": [
+     "work_orders-10"
+    ]
+   },
+   {
+    "q": "ENG-082 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-26",
+     "sop-05",
+     "work_orders-16"
+    ],
+    "gold": [
+     "work_orders-26"
+    ]
+   },
+   {
+    "q": "ENG-020 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-42",
+     "sop-05",
+     "work_orders-16"
+    ],
+    "gold": [
+     "work_orders-42"
+    ]
+   },
+   {
+    "q": "ENG-035 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-04",
+     "shift_logs-01",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "work_orders-04"
+    ]
+   },
+   {
+    "q": "ENG-056 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-05",
+     "shift_logs-02",
+     "shift_logs-04"
+    ],
+    "gold": [
+     "work_orders-05"
+    ]
+   },
+   {
+    "q": "ENG-021 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-53",
+     "shift_logs-05",
+     "model_card-05"
+    ],
+    "gold": [
+     "work_orders-53"
+    ]
+   },
+   {
+    "q": "ENG-041 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-35",
+     "shift_logs-03",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "work_orders-35"
+    ]
+   },
+   {
+    "q": "ENG-040 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-07",
+     "shift_logs-02",
+     "shift_logs-04"
+    ],
+    "gold": [
+     "work_orders-07"
+    ]
+   },
+   {
+    "q": "ENG-092 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-24",
+     "shift_logs-06",
+     "sop-05"
+    ],
+    "gold": [
+     "work_orders-24"
+    ]
+   },
+   {
+    "q": "ENG-018 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-38",
+     "shift_logs-04",
+     "shift_logs-06"
+    ],
+    "gold": [
+     "work_orders-38"
+    ]
+   },
+   {
+    "q": "ENG-052 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-57",
+     "sop-05",
+     "work_orders-16"
+    ],
+    "gold": [
+     "work_orders-57"
+    ]
    }
-  ]
+  ],
+  "hit@1": 0.6388888888888888
  },
- "n_questions": 24
+ "vector": {
+  "hit@3": 0.9722222222222222,
+  "hit@5": 1.0,
+  "mrr": 0.9606481481481483,
+  "per_question": [
+   {
+    "q": "ENG-064 的工單現在是什麼狀態？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-45",
+     "work_orders-18",
+     "work_orders-47"
+    ],
+    "gold": [
+     "shift_logs-07",
+     "work_orders-45"
+    ]
+   },
+   {
+    "q": "72 號引擎最後一筆讀數是健康的，可以結案嗎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "shift_logs-08",
+     "shift_logs-07",
+     "work_orders-41"
+    ],
+    "gold": [
+     "shift_logs-08",
+     "work_orders-41"
+    ]
+   },
+   {
+    "q": "Sensor 4 的正常範圍是多少？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "manual-02",
+     "manual-03",
+     "manual-05"
+    ],
+    "gold": [
+     "manual-02"
+    ]
+   },
+   {
+    "q": "高壓壓縮機出口的靜壓是由哪一顆感測器量測？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-03",
+     "manual-07",
+     "manual-02"
+    ],
+    "gold": [
+     "manual-03"
+    ]
+   },
+   {
+    "q": "L3 停機檢查要在多久內處理完？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "sop-04",
+     "sop-03",
+     "sop-06"
+    ],
+    "gold": [
+     "sop-04"
+    ]
+   },
+   {
+    "q": "排程檢查的時限是幾小時？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "sop-03",
+     "manual-09",
+     "shift_logs-01"
+    ],
+    "gold": [
+     "sop-03"
+    ]
+   },
+   {
+    "q": "什麼情況下要把引擎停下來檢查？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "sop-04",
+     "manual-09",
+     "shift_logs-07"
+    ],
+    "gold": [
+     "sop-01",
+     "sop-04"
+    ]
+   },
+   {
+    "q": "哪些感測器讀數一直不變、不用看？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-06",
+     "manual-03",
+     "manual-09"
+    ],
+    "gold": [
+     "manual-06"
+    ]
+   },
+   {
+    "q": "壓縮機快壞的時候，溫度會往哪個方向變？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-07",
+     "manual-02",
+     "manual-03"
+    ],
+    "gold": [
+     "manual-02",
+     "manual-07"
+    ]
+   },
+   {
+    "q": "模型的準確率和召回率是多少？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-04",
+     "sop-05",
+     "lean-06"
+    ],
+    "gold": [
+     "model_card-04"
+    ]
+   },
+   {
+    "q": "模型有哪些引擎沒抓到？",
+    "kind": "換句話說",
+    "rank": 4,
+    "top3": [
+     "sop-05",
+     "model_card-04",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-05"
+    ]
+   },
+   {
+    "q": "系統是怎麼決定一筆讀數是 Healthy 還是 Warning？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "manual-08",
+     "sop-01",
+     "sop-05"
+    ],
+    "gold": [
+     "manual-08",
+     "model_card-02"
+    ]
+   },
+   {
+    "q": "為什麼不直接訓練一個分類器？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-01",
+     "model_card-02",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-01"
+    ]
+   },
+   {
+    "q": "維護成本降低 84% 是怎麼算出來的？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "lean-06",
+     "lean-05",
+     "lean-03"
+    ],
+    "gold": [
+     "lean-06"
+    ]
+   },
+   {
+    "q": "自動化之後比人工快了幾倍？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-03",
+     "lean-05",
+     "lean-04"
+    ],
+    "gold": [
+     "lean-03"
+    ]
+   },
+   {
+    "q": "用 Excel 手動整理報表可能會有什麼看不出來的錯？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-04",
+     "lean-02",
+     "lean-03"
+    ],
+    "gold": [
+     "lean-04"
+    ]
+   },
+   {
+    "q": "這個改善案多久可以回本？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-05",
+     "lean-06",
+     "lean-01"
+    ],
+    "gold": [
+     "lean-05"
+    ]
+   },
+   {
+    "q": "專案有沒有真的連到 SAP 系統？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "lean-07",
+     "lean-02",
+     "lean-01"
+    ],
+    "gold": [
+     "lean-07"
+    ]
+   },
+   {
+    "q": "總共開了幾張維修工單？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "work_orders-62",
+     "work_orders-06",
+     "work_orders-13"
+    ],
+    "gold": [
+     "work_orders-62"
+    ]
+   },
+   {
+    "q": "哪些引擎從來沒有開過工單？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "work_orders-63",
+     "work_orders-62",
+     "shift_logs-03"
+    ],
+    "gold": [
+     "work_orders-63"
+    ]
+   },
+   {
+    "q": "多久要做一次例行巡檢？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-09",
+     "work_orders-62",
+     "work_orders-22"
+    ],
+    "gold": [
+     "manual-09"
+    ]
+   },
+   {
+    "q": "這個模型在什麼條件下沒有驗證過？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-07",
+     "model_card-06",
+     "model_card-02"
+    ],
+    "gold": [
+     "model_card-07"
+    ]
+   },
+   {
+    "q": "7 月 1 日日班交接了哪些事？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "shift_logs-01",
+     "shift_logs-02",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "shift_logs-01"
+    ]
+   },
+   {
+    "q": "只看最後一筆讀數和看一段時間的趨勢，哪個比較不會漏掉壞掉的引擎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "model_card-06",
+     "sop-05",
+     "work_orders-22"
+    ],
+    "gold": [
+     "model_card-06",
+     "sop-05"
+    ]
+   },
+   {
+    "q": "ENG-046 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-21",
+     "work_orders-27",
+     "work_orders-46"
+    ],
+    "gold": [
+     "work_orders-21"
+    ]
+   },
+   {
+    "q": "ENG-006 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 3,
+    "top3": [
+     "work_orders-05",
+     "work_orders-06",
+     "work_orders-10"
+    ],
+    "gold": [
+     "work_orders-10"
+    ]
+   },
+   {
+    "q": "ENG-082 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-26",
+     "work_orders-33",
+     "work_orders-09"
+    ],
+    "gold": [
+     "work_orders-26"
+    ]
+   },
+   {
+    "q": "ENG-020 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-42",
+     "work_orders-20",
+     "work_orders-28"
+    ],
+    "gold": [
+     "work_orders-42"
+    ]
+   },
+   {
+    "q": "ENG-035 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-04",
+     "work_orders-35",
+     "work_orders-55"
+    ],
+    "gold": [
+     "work_orders-04"
+    ]
+   },
+   {
+    "q": "ENG-056 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-05",
+     "work_orders-56",
+     "work_orders-58"
+    ],
+    "gold": [
+     "work_orders-05"
+    ]
+   },
+   {
+    "q": "ENG-021 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-53",
+     "work_orders-21",
+     "work_orders-41"
+    ],
+    "gold": [
+     "work_orders-53"
+    ]
+   },
+   {
+    "q": "ENG-041 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-35",
+     "work_orders-41",
+     "work_orders-40"
+    ],
+    "gold": [
+     "work_orders-35"
+    ]
+   },
+   {
+    "q": "ENG-040 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-07",
+     "work_orders-40",
+     "work_orders-35"
+    ],
+    "gold": [
+     "work_orders-07"
+    ]
+   },
+   {
+    "q": "ENG-092 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-24",
+     "work_orders-29",
+     "work_orders-16"
+    ],
+    "gold": [
+     "work_orders-24"
+    ]
+   },
+   {
+    "q": "ENG-018 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-38",
+     "work_orders-18",
+     "work_orders-58"
+    ],
+    "gold": [
+     "work_orders-38"
+    ]
+   },
+   {
+    "q": "ENG-052 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-57",
+     "work_orders-52",
+     "work_orders-39"
+    ],
+    "gold": [
+     "work_orders-57"
+    ]
+   }
+  ],
+  "hit@1": 0.9444444444444444
+ },
+ "hybrid": {
+  "hit@3": 0.9444444444444444,
+  "hit@5": 0.9722222222222222,
+  "mrr": 0.8705808080808081,
+  "per_question": [
+   {
+    "q": "ENG-064 的工單現在是什麼狀態？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-45",
+     "work_orders-33",
+     "work_orders-47"
+    ],
+    "gold": [
+     "shift_logs-07",
+     "work_orders-45"
+    ]
+   },
+   {
+    "q": "72 號引擎最後一筆讀數是健康的，可以結案嗎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "shift_logs-08",
+     "shift_logs-07",
+     "work_orders-22"
+    ],
+    "gold": [
+     "shift_logs-08",
+     "work_orders-41"
+    ]
+   },
+   {
+    "q": "Sensor 4 的正常範圍是多少？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "manual-02",
+     "manual-05",
+     "manual-03"
+    ],
+    "gold": [
+     "manual-02"
+    ]
+   },
+   {
+    "q": "高壓壓縮機出口的靜壓是由哪一顆感測器量測？",
+    "kind": "換句話說",
+    "rank": 2,
+    "top3": [
+     "manual-07",
+     "manual-03",
+     "manual-02"
+    ],
+    "gold": [
+     "manual-03"
+    ]
+   },
+   {
+    "q": "L3 停機檢查要在多久內處理完？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "sop-04",
+     "shift_logs-06",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "sop-04"
+    ]
+   },
+   {
+    "q": "排程檢查的時限是幾小時？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "sop-03",
+     "work_orders-33",
+     "work_orders-58"
+    ],
+    "gold": [
+     "sop-03"
+    ]
+   },
+   {
+    "q": "什麼情況下要把引擎停下來檢查？",
+    "kind": "換句話說",
+    "rank": 2,
+    "top3": [
+     "manual-09",
+     "sop-04",
+     "sop-05"
+    ],
+    "gold": [
+     "sop-01",
+     "sop-04"
+    ]
+   },
+   {
+    "q": "哪些感測器讀數一直不變、不用看？",
+    "kind": "換句話說",
+    "rank": 2,
+    "top3": [
+     "manual-09",
+     "manual-06",
+     "manual-03"
+    ],
+    "gold": [
+     "manual-06"
+    ]
+   },
+   {
+    "q": "壓縮機快壞的時候，溫度會往哪個方向變？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-02",
+     "manual-07",
+     "sop-03"
+    ],
+    "gold": [
+     "manual-02",
+     "manual-07"
+    ]
+   },
+   {
+    "q": "模型的準確率和召回率是多少？",
+    "kind": "概念",
+    "rank": 2,
+    "top3": [
+     "sop-05",
+     "model_card-04",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-04"
+    ]
+   },
+   {
+    "q": "模型有哪些引擎沒抓到？",
+    "kind": "換句話說",
+    "rank": 11,
+    "top3": [
+     "model_card-04",
+     "sop-05",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-05"
+    ]
+   },
+   {
+    "q": "系統是怎麼決定一筆讀數是 Healthy 還是 Warning？",
+    "kind": "概念",
+    "rank": 4,
+    "top3": [
+     "shift_logs-08",
+     "shift_logs-07",
+     "work_orders-01"
+    ],
+    "gold": [
+     "manual-08",
+     "model_card-02"
+    ]
+   },
+   {
+    "q": "為什麼不直接訓練一個分類器？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-01",
+     "model_card-02",
+     "model_card-03"
+    ],
+    "gold": [
+     "model_card-01"
+    ]
+   },
+   {
+    "q": "維護成本降低 84% 是怎麼算出來的？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "lean-06",
+     "lean-05",
+     "model_card-07"
+    ],
+    "gold": [
+     "lean-06"
+    ]
+   },
+   {
+    "q": "自動化之後比人工快了幾倍？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-03",
+     "lean-02",
+     "lean-05"
+    ],
+    "gold": [
+     "lean-03"
+    ]
+   },
+   {
+    "q": "用 Excel 手動整理報表可能會有什麼看不出來的錯？",
+    "kind": "換句話說",
+    "rank": 2,
+    "top3": [
+     "lean-02",
+     "lean-04",
+     "lean-07"
+    ],
+    "gold": [
+     "lean-04"
+    ]
+   },
+   {
+    "q": "這個改善案多久可以回本？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-05",
+     "lean-02",
+     "lean-03"
+    ],
+    "gold": [
+     "lean-05"
+    ]
+   },
+   {
+    "q": "專案有沒有真的連到 SAP 系統？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "lean-07",
+     "lean-06",
+     "lean-02"
+    ],
+    "gold": [
+     "lean-07"
+    ]
+   },
+   {
+    "q": "總共開了幾張維修工單？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "work_orders-62",
+     "work_orders-37",
+     "work_orders-33"
+    ],
+    "gold": [
+     "work_orders-62"
+    ]
+   },
+   {
+    "q": "哪些引擎從來沒有開過工單？",
+    "kind": "換句話說",
+    "rank": 2,
+    "top3": [
+     "work_orders-62",
+     "work_orders-63",
+     "shift_logs-03"
+    ],
+    "gold": [
+     "work_orders-63"
+    ]
+   },
+   {
+    "q": "多久要做一次例行巡檢？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-09",
+     "sop-03",
+     "model_card-04"
+    ],
+    "gold": [
+     "manual-09"
+    ]
+   },
+   {
+    "q": "這個模型在什麼條件下沒有驗證過？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-07",
+     "sop-05",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-07"
+    ]
+   },
+   {
+    "q": "7 月 1 日日班交接了哪些事？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "shift_logs-01",
+     "shift_logs-03",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "shift_logs-01"
+    ]
+   },
+   {
+    "q": "只看最後一筆讀數和看一段時間的趨勢，哪個比較不會漏掉壞掉的引擎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "model_card-06",
+     "work_orders-06",
+     "work_orders-34"
+    ],
+    "gold": [
+     "model_card-06",
+     "sop-05"
+    ]
+   },
+   {
+    "q": "ENG-046 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-21",
+     "work_orders-16",
+     "work_orders-47"
+    ],
+    "gold": [
+     "work_orders-21"
+    ]
+   },
+   {
+    "q": "ENG-006 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-10",
+     "work_orders-06",
+     "work_orders-18"
+    ],
+    "gold": [
+     "work_orders-10"
+    ]
+   },
+   {
+    "q": "ENG-082 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-26",
+     "work_orders-33",
+     "work_orders-32"
+    ],
+    "gold": [
+     "work_orders-26"
+    ]
+   },
+   {
+    "q": "ENG-020 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-42",
+     "work_orders-53",
+     "work_orders-20"
+    ],
+    "gold": [
+     "work_orders-42"
+    ]
+   },
+   {
+    "q": "ENG-035 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-04",
+     "work_orders-33",
+     "work_orders-37"
+    ],
+    "gold": [
+     "work_orders-04"
+    ]
+   },
+   {
+    "q": "ENG-056 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-05",
+     "work_orders-14",
+     "work_orders-58"
+    ],
+    "gold": [
+     "work_orders-05"
+    ]
+   },
+   {
+    "q": "ENG-021 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-53",
+     "work_orders-14",
+     "work_orders-37"
+    ],
+    "gold": [
+     "work_orders-53"
+    ]
+   },
+   {
+    "q": "ENG-041 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-35",
+     "work_orders-58",
+     "work_orders-33"
+    ],
+    "gold": [
+     "work_orders-35"
+    ]
+   },
+   {
+    "q": "ENG-040 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-07",
+     "work_orders-47",
+     "work_orders-58"
+    ],
+    "gold": [
+     "work_orders-07"
+    ]
+   },
+   {
+    "q": "ENG-092 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-24",
+     "work_orders-16",
+     "work_orders-32"
+    ],
+    "gold": [
+     "work_orders-24"
+    ]
+   },
+   {
+    "q": "ENG-018 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-38",
+     "work_orders-18",
+     "work_orders-58"
+    ],
+    "gold": [
+     "work_orders-38"
+    ]
+   },
+   {
+    "q": "ENG-052 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-57",
+     "work_orders-32",
+     "work_orders-53"
+    ],
+    "gold": [
+     "work_orders-57"
+    ]
+   }
+  ],
+  "hit@1": 0.7777777777777778
+ },
+ "vector_id": {
+  "hit@3": 0.9722222222222222,
+  "hit@5": 1.0,
+  "mrr": 0.9791666666666666,
+  "per_question": [
+   {
+    "q": "ENG-064 的工單現在是什麼狀態？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-45",
+     "shift_logs-07",
+     "model_card-05"
+    ],
+    "gold": [
+     "shift_logs-07",
+     "work_orders-45"
+    ]
+   },
+   {
+    "q": "72 號引擎最後一筆讀數是健康的，可以結案嗎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "shift_logs-08",
+     "shift_logs-07",
+     "work_orders-41"
+    ],
+    "gold": [
+     "shift_logs-08",
+     "work_orders-41"
+    ]
+   },
+   {
+    "q": "Sensor 4 的正常範圍是多少？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "manual-02",
+     "manual-03",
+     "manual-05"
+    ],
+    "gold": [
+     "manual-02"
+    ]
+   },
+   {
+    "q": "高壓壓縮機出口的靜壓是由哪一顆感測器量測？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-03",
+     "manual-07",
+     "manual-02"
+    ],
+    "gold": [
+     "manual-03"
+    ]
+   },
+   {
+    "q": "L3 停機檢查要在多久內處理完？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "sop-04",
+     "sop-03",
+     "sop-06"
+    ],
+    "gold": [
+     "sop-04"
+    ]
+   },
+   {
+    "q": "排程檢查的時限是幾小時？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "sop-03",
+     "manual-09",
+     "shift_logs-01"
+    ],
+    "gold": [
+     "sop-03"
+    ]
+   },
+   {
+    "q": "什麼情況下要把引擎停下來檢查？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "sop-04",
+     "manual-09",
+     "shift_logs-07"
+    ],
+    "gold": [
+     "sop-01",
+     "sop-04"
+    ]
+   },
+   {
+    "q": "哪些感測器讀數一直不變、不用看？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-06",
+     "manual-03",
+     "manual-09"
+    ],
+    "gold": [
+     "manual-06"
+    ]
+   },
+   {
+    "q": "壓縮機快壞的時候，溫度會往哪個方向變？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-07",
+     "manual-02",
+     "manual-03"
+    ],
+    "gold": [
+     "manual-02",
+     "manual-07"
+    ]
+   },
+   {
+    "q": "模型的準確率和召回率是多少？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-04",
+     "sop-05",
+     "lean-06"
+    ],
+    "gold": [
+     "model_card-04"
+    ]
+   },
+   {
+    "q": "模型有哪些引擎沒抓到？",
+    "kind": "換句話說",
+    "rank": 4,
+    "top3": [
+     "sop-05",
+     "model_card-04",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-05"
+    ]
+   },
+   {
+    "q": "系統是怎麼決定一筆讀數是 Healthy 還是 Warning？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "manual-08",
+     "sop-01",
+     "sop-05"
+    ],
+    "gold": [
+     "manual-08",
+     "model_card-02"
+    ]
+   },
+   {
+    "q": "為什麼不直接訓練一個分類器？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-01",
+     "model_card-02",
+     "model_card-06"
+    ],
+    "gold": [
+     "model_card-01"
+    ]
+   },
+   {
+    "q": "維護成本降低 84% 是怎麼算出來的？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "lean-06",
+     "lean-05",
+     "lean-03"
+    ],
+    "gold": [
+     "lean-06"
+    ]
+   },
+   {
+    "q": "自動化之後比人工快了幾倍？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-03",
+     "lean-05",
+     "lean-04"
+    ],
+    "gold": [
+     "lean-03"
+    ]
+   },
+   {
+    "q": "用 Excel 手動整理報表可能會有什麼看不出來的錯？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-04",
+     "lean-02",
+     "lean-03"
+    ],
+    "gold": [
+     "lean-04"
+    ]
+   },
+   {
+    "q": "這個改善案多久可以回本？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "lean-05",
+     "lean-06",
+     "lean-01"
+    ],
+    "gold": [
+     "lean-05"
+    ]
+   },
+   {
+    "q": "專案有沒有真的連到 SAP 系統？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "lean-07",
+     "lean-02",
+     "lean-01"
+    ],
+    "gold": [
+     "lean-07"
+    ]
+   },
+   {
+    "q": "總共開了幾張維修工單？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "work_orders-62",
+     "work_orders-06",
+     "work_orders-13"
+    ],
+    "gold": [
+     "work_orders-62"
+    ]
+   },
+   {
+    "q": "哪些引擎從來沒有開過工單？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "work_orders-63",
+     "work_orders-62",
+     "shift_logs-03"
+    ],
+    "gold": [
+     "work_orders-63"
+    ]
+   },
+   {
+    "q": "多久要做一次例行巡檢？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "manual-09",
+     "work_orders-62",
+     "work_orders-22"
+    ],
+    "gold": [
+     "manual-09"
+    ]
+   },
+   {
+    "q": "這個模型在什麼條件下沒有驗證過？",
+    "kind": "概念",
+    "rank": 1,
+    "top3": [
+     "model_card-07",
+     "model_card-06",
+     "model_card-02"
+    ],
+    "gold": [
+     "model_card-07"
+    ]
+   },
+   {
+    "q": "7 月 1 日日班交接了哪些事？",
+    "kind": "精確代號",
+    "rank": 1,
+    "top3": [
+     "shift_logs-01",
+     "shift_logs-02",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "shift_logs-01"
+    ]
+   },
+   {
+    "q": "只看最後一筆讀數和看一段時間的趨勢，哪個比較不會漏掉壞掉的引擎？",
+    "kind": "換句話說",
+    "rank": 1,
+    "top3": [
+     "model_card-06",
+     "sop-05",
+     "work_orders-22"
+    ],
+    "gold": [
+     "model_card-06",
+     "sop-05"
+    ]
+   },
+   {
+    "q": "ENG-046 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-21",
+     "shift_logs-04",
+     "shift_logs-06"
+    ],
+    "gold": [
+     "work_orders-21"
+    ]
+   },
+   {
+    "q": "ENG-006 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-10",
+     "shift_logs-02",
+     "work_orders-05"
+    ],
+    "gold": [
+     "work_orders-10"
+    ]
+   },
+   {
+    "q": "ENG-082 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-26",
+     "work_orders-33",
+     "work_orders-09"
+    ],
+    "gold": [
+     "work_orders-26"
+    ]
+   },
+   {
+    "q": "ENG-020 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-42",
+     "work_orders-20",
+     "work_orders-28"
+    ],
+    "gold": [
+     "work_orders-42"
+    ]
+   },
+   {
+    "q": "ENG-035 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-04",
+     "shift_logs-01",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "work_orders-04"
+    ]
+   },
+   {
+    "q": "ENG-056 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-05",
+     "shift_logs-02",
+     "shift_logs-04"
+    ],
+    "gold": [
+     "work_orders-05"
+    ]
+   },
+   {
+    "q": "ENG-021 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-53",
+     "shift_logs-05",
+     "model_card-05"
+    ],
+    "gold": [
+     "work_orders-53"
+    ]
+   },
+   {
+    "q": "ENG-041 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-35",
+     "shift_logs-03",
+     "shift_logs-05"
+    ],
+    "gold": [
+     "work_orders-35"
+    ]
+   },
+   {
+    "q": "ENG-040 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-07",
+     "shift_logs-02",
+     "shift_logs-04"
+    ],
+    "gold": [
+     "work_orders-07"
+    ]
+   },
+   {
+    "q": "ENG-092 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-24",
+     "shift_logs-06",
+     "work_orders-29"
+    ],
+    "gold": [
+     "work_orders-24"
+    ]
+   },
+   {
+    "q": "ENG-018 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-38",
+     "shift_logs-04",
+     "shift_logs-06"
+    ],
+    "gold": [
+     "work_orders-38"
+    ]
+   },
+   {
+    "q": "ENG-052 的工單狀態是什麼？",
+    "kind": "機台代號",
+    "rank": 1,
+    "top3": [
+     "work_orders-57",
+     "work_orders-52",
+     "work_orders-39"
+    ],
+    "gold": [
+     "work_orders-57"
+    ]
+   }
+  ],
+  "hit@1": 0.9722222222222222
+ },
+ "n_questions": 36,
+ "kinds": {
+  "精確代號": 5,
+  "換句話說": 14,
+  "概念": 5,
+  "機台代號": 12
+ }
 }

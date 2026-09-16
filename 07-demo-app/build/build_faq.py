@@ -35,6 +35,10 @@ def main() -> int:
     out, ok = [], True
     for q in SUGGESTED:
         a = answer(R, q, key)
+        if a.mode != "generated":                  # 暫時性錯誤：等 30 秒再試一次
+            print(f"⏳ 第一次失敗（{a.note}），30 秒後重試")
+            time.sleep(30)
+            a = answer(R, q, key)
         if a.mode != "generated":
             print(f"❌ 無法生成：{q}｜{a.note}")
             return 1

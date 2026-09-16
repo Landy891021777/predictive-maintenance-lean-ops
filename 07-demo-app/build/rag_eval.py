@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -60,6 +61,18 @@ QUESTIONS = [
     ("只看最後一筆讀數和看一段時間的趨勢，哪個比較不會漏掉壞掉的引擎？", "換句話說", [("sec", "model_card", "6."), ("sec", "sop", "5.")]),
 ]
 
+# 機台代號題：從工單中以固定種子隨機抽 12 台（非挑選），檢驗相似代號是否會混淆（如 ENG-006 vs ENG-056）
+ENGINE_SAMPLE_SEED, ENGINE_SAMPLE_N = 7, 12
+
+
+def engine_questions(chunks: list[dict]) -> list[tuple]:
+    import random
+    wo = [c for c in chunks if c["doc"] == "work_orders" and c["section"].startswith("MWO")]
+    picked = random.Random(ENGINE_SAMPLE_SEED).sample(wo, ENGINE_SAMPLE_N)
+    return [(f"{c['engines'][0]} 的工單狀態是什麼？", "機台代號", [("eng", "work_orders", c["engines"][0], "MWO")])
+            for c in picked]
+
+
 QUERY_CACHE = CORPUS_DIR / "eval_query_vectors.npz"
 
 
@@ -76,28 +89,35 @@ def gold_ids(chunks: list[dict], conds: list[tuple]) -> set[str]:
     return ids
 
 
-def query_vectors(key: str | None) -> np.ndarray | None:
-    qs = [q for q, _, _ in QUESTIONS]
+def query_vectors(questions: list[tuple], key: str | None) -> np.ndarray | None:
+    qs = [q for q, _, _ in questions]
     if QUERY_CACHE.exists():
         c = np.load(QUERY_CACHE, allow_pickle=False)
         if list(c["questions"]) == qs:
             return c["vectors"]
     if not key:
         return None
-    try:
-        vecs = np.asarray(embed_batch([format_query(q) for q in qs], key), dtype=np.float32)
-    except GeminiError as e:
-        print(f"⚠️ 問題向量化失敗，只評估 BM25：{e}")
-        return None
+    # 免費層 embedding 限制為每分鐘 100 次（批次中每段各算一次），遇到 429 等一分鐘再試
+    for attempt in range(1, 4):
+        try:
+            vecs = np.asarray(embed_batch([format_query(q) for q in qs], key), dtype=np.float32)
+            break
+        except GeminiError as e:
+            if e.rate_limited and attempt < 3:
+                print(f"⏳ embedding 每分鐘額度已滿，等待 65 秒後重試（第 {attempt} 次）")
+                time.sleep(65)
+                continue
+            print(f"⚠️ 問題向量化失敗，只評估 BM25：{e.status}")
+            return None
     np.savez_compressed(QUERY_CACHE, questions=np.array(qs), vectors=vecs)
     return vecs
 
 
-def evaluate(R: Retriever, mode: str, qvecs: np.ndarray | None) -> dict:
+def evaluate(R: Retriever, questions: list[tuple], mode: str, qvecs: np.ndarray | None) -> dict:
     hits3 = hits5 = 0
     rr = []
     per_q = []
-    for i, (q, kind, conds) in enumerate(QUESTIONS):
+    for i, (q, kind, conds) in enumerate(questions):
         gold = gold_ids(R.chunks, conds)
         assert gold, f"題目「{q}」找不到 gold 段落，請檢查條件"
         if mode == "bm25":
@@ -106,6 +126,8 @@ def evaluate(R: Retriever, mode: str, qvecs: np.ndarray | None) -> dict:
             v = qvecs[i] / np.linalg.norm(qvecs[i])
             order = np.argsort(-(R.vectors @ v))
             ranked = [type("H", (), {"chunk": R.chunks[j]}) for j in order]
+        elif mode == "vector_id":
+            ranked = R.search_vector(q, qvecs[i].tolist(), k=len(R.chunks))
         else:
             ranked = R.search(q, k=len(R.chunks), query_vector=qvecs[i].tolist())
         ids = [h.chunk["id"] for h in ranked]
@@ -114,40 +136,47 @@ def evaluate(R: Retriever, mode: str, qvecs: np.ndarray | None) -> dict:
         hits5 += bool(first and first <= 5)
         rr.append(1.0 / first if first else 0.0)
         per_q.append({"q": q, "kind": kind, "rank": first, "top3": ids[:3], "gold": sorted(gold)})
-    n = len(QUESTIONS)
+    n = len(questions)
     return {"hit@3": hits3 / n, "hit@5": hits5 / n, "mrr": float(np.mean(rr)), "per_question": per_q}
 
 
 def main() -> int:
     R = Retriever()
     key = get_api_key()
-    qvecs = query_vectors(key) if R.has_vectors else None
+    questions = QUESTIONS + engine_questions(R.chunks)
+    qvecs = query_vectors(questions, key) if R.has_vectors else None
 
-    modes = ["bm25"] + (["vector", "hybrid"] if qvecs is not None else [])
-    results = {m: evaluate(R, m, qvecs) for m in modes}
+    modes = ["bm25"] + (["vector", "hybrid", "vector_id"] if qvecs is not None else [])
+    names = {"bm25": "BM25", "vector": "向量", "hybrid": "混合RRF", "vector_id": "向量+代號"}
+    results = {m: evaluate(R, questions, m, qvecs) for m in modes}
+    kinds = ["精確代號", "換句話說", "概念", "機台代號"]
 
-    print(f"題數 {len(QUESTIONS)}（" + "、".join(
-        f"{k} {sum(1 for _, t, _ in QUESTIONS if t == k)}" for k in ["精確代號", "換句話說", "概念"]) + "）\n")
-    print(f"{'檢索方式':10s} {'Hit@3':>7s} {'Hit@5':>7s} {'MRR':>7s}")
+    print(f"題數 {len(questions)}（" + "、".join(
+        f"{k} {sum(1 for _, t, _ in questions if t == k)}" for k in kinds) + "）\n")
+    print(f"{'檢索方式':10s} {'Hit@1':>7s} {'Hit@3':>7s} {'Hit@5':>7s} {'MRR':>7s}")
     for m, r in results.items():
-        print(f"{m:12s} {r['hit@3']:7.1%} {r['hit@5']:7.1%} {r['mrr']:7.3f}")
+        h1 = sum(1 for p in r["per_question"] if p["rank"] == 1) / len(questions)
+        r["hit@1"] = h1
+        print(f"{names[m]:10s} {h1:7.1%} {r['hit@3']:7.1%} {r['hit@5']:7.1%} {r['mrr']:7.3f}")
 
-    for kind in ["精確代號", "換句話說", "概念"]:
-        row = [kind]
+    print("\nHit@1 依問法（第一名就答對，對生成品質影響最大）：")
+    for kind in kinds:
+        cells = []
         for m, r in results.items():
             qs = [p for p in r["per_question"] if p["kind"] == kind]
-            row.append(f"{m} {sum(1 for p in qs if p['rank'] and p['rank'] <= 3)}/{len(qs)}")
-        print("  Hit@3 依問法：" + "｜".join(row))
+            cells.append(f"{names[m]} {sum(1 for p in qs if p['rank'] == 1)}/{len(qs)}")
+        print(f"  {kind:6s}｜" + "｜".join(cells))
 
-    worst = results[modes[-1]]["per_question"]
-    misses = [p for p in worst if not p["rank"] or p["rank"] > 3]
+    final = modes[-1]
+    misses = [p for p in results[final]["per_question"] if p["rank"] != 1]
     if misses:
-        print(f"\n{modes[-1]} 前三名沒命中的題目：")
+        print(f"\n{names[final]} 第一名沒答對的題目：")
         for p in misses:
-            print(f"  排名 {p['rank']}｜{p['q']}｜前三名 {p['top3']}｜正確 {p['gold']}")
+            print(f"  排名 {p['rank']}｜{p['q']}｜第一名 {p['top3'][0]}｜正確 {p['gold']}")
 
-    out = {m: {k: v for k, v in r.items()} for m, r in results.items()}
-    out["n_questions"] = len(QUESTIONS)
+    out = dict(results)
+    out["n_questions"] = len(questions)
+    out["kinds"] = {k: sum(1 for _, t, _ in questions if t == k) for k in kinds}
     (CORPUS_DIR / "rag_eval.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     return 0
 
