@@ -20,6 +20,11 @@ REPO_ROOT = APP_DIR.parent
 ASSETS = APP_DIR / "assets"
 OUTPUTS = REPO_ROOT / "01-core-model" / "outputs"
 
+# 自動化頁（P2）用：模擬 SAP 匯出檔、Power Automate 實際產出與截圖
+SAP_LIFECYCLE = REPO_ROOT / "02-automation-vba" / "sample-data" / "lifecycle"
+RPA_REPORT = REPO_ROOT / "03-rpa-power-automate" / "outbox" / "DailyHealthReport_20260711.xlsm"
+PAD_SCREENSHOT = REPO_ROOT / "03-rpa-power-automate" / "screenshots" / "自動化流程.png"
+
 
 @dataclass(frozen=True)
 class Validation:
@@ -119,3 +124,27 @@ def load_support_scatter(max_points: int = 4000) -> pd.DataFrame:
         "z2": z[idx, 1],
         "狀態": np.where(labels[idx] == 1, "Warning", "Healthy"),
     })
+
+
+@st.cache_data
+def load_rpa_runlog() -> dict:
+    """Power Automate 實際跑出的報表中，VBA 寫入的 run log（Summary!A2:B10）。
+
+    這是本機 Excel 真的執行過 CleanAndSummarizeSilent 的證據，
+    自動化頁用它與網頁上的 Python 重現結果並排對照。
+    """
+    import openpyxl
+
+    wb = openpyxl.load_workbook(RPA_REPORT, read_only=True, data_only=True)
+    rows = list(wb["Summary"].iter_rows(min_row=2, max_row=10, max_col=2, values_only=True))
+    wb.close()
+    return {k: v for k, v in rows if k}
+
+
+@st.cache_data
+def load_raw_export_lines(max_lines: int = 5000) -> tuple[str, list[str]]:
+    """第一個模擬 SAP 匯出檔的原始文字行（含表頭），用來展示髒資料原貌。"""
+    path = sorted(SAP_LIFECYCLE.glob("*.csv"))[0]
+    with path.open("r", encoding="utf-8-sig", newline="") as fh:
+        lines = [ln.rstrip("\r\n") for _, ln in zip(range(max_lines), fh)]
+    return path.name, lines

@@ -109,9 +109,9 @@ def render() -> None:
         with c3:
             st.write("")
             b1, b2 = st.columns(2)
-            b1.button("載入這筆讀數", use_container_width=True,
+            b1.button("載入這筆讀數", width="stretch",
                       on_click=_load_preset, args=(sensors, unit, cycle, meta, u, c))
-            b2.button("載入最後一個 cycle", use_container_width=True,
+            b2.button("載入最後一個 cycle", width="stretch",
                       on_click=_load_preset,
                       args=(sensors, unit, cycle, meta, u, int(cycles.max())))
 
@@ -195,7 +195,7 @@ def render() -> None:
                         color="#1f6feb", stroke="white", strokeWidth=2)
             .encode(x="z1:Q", y="z2:Q")
         )
-        st.altair_chart((base + here).properties(height=380), use_container_width=True)
+        st.altair_chart((base + here).properties(height=380), width="stretch")
         st.caption("散點為 support set（抽樣 4,000 點），藍色菱形是目前這筆讀數的位置。")
 
     with right:

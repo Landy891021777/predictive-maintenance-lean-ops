@@ -9,5 +9,5 @@
 torch            # VAE 訓練與權重匯出（僅離線）
 scikit-learn     # MinMaxScaler / train_test_split / 評估指標
 matplotlib       # notebook 繪圖
-openpyxl         # ROI 試算表與模擬資料產生
+# openpyxl 已列在 requirements.txt
 mcp              # 01-core-model/server/vae_mcp_server.py

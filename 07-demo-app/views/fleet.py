@@ -89,7 +89,7 @@ def render() -> None:
             )
             .properties(height=330)
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
         st.caption(
             "橫軸是引擎累積運轉 cycle，縱軸是這筆讀數在潛空間裡離最近訓練點的距離。"
             "引擎退化時，讀數會逐漸飄離健康樣本聚集的區域。"
@@ -109,7 +109,7 @@ def render() -> None:
             )
             .properties(height=320)
         )
-        st.altair_chart(traj, use_container_width=True)
+        st.altair_chart(traj, width="stretch")
         st.caption("同一台引擎在 2 維潛空間中隨時間移動的軌跡，顏色由深到淺代表 cycle 由小到大。")
 
     # ---------------- 模型犯的錯 ----------------
@@ -130,7 +130,7 @@ def render() -> None:
         st.dataframe(
             wrong[["EquipmentID", "LastCycle", "TrueRUL", "TrueLabel",
                    "PredictedStatus", "NearestDistance", "結果"]],
-            use_container_width=True, hide_index=True,
+            width="stretch", hide_index=True,
             column_config={
                 "EquipmentID": "機台",
                 "LastCycle": "最後 cycle",
@@ -172,7 +172,7 @@ def render() -> None:
         )
         left, right = st.columns([2, 3], gap="large")
         with left:
-            st.dataframe(cm, use_container_width=True)
+            st.dataframe(cm, width="stretch")
             st.markdown(
                 f"""
 |  | Precision | Recall |

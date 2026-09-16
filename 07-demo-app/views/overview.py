@@ -30,7 +30,7 @@ def render() -> None:
                     f"{v.cm[1,1]}/{v.cm[1].sum()} 台抓到，漏判 {v.missed} 台", MEASURED)
     with c3:
         metric_card("資料處理提速", "562×",
-                    "13,096 列：手動 15 分 → 自動 1.6 秒", MEASURED)
+                    "原始 13,750 列：手動 15 分 → 自動 1.6 秒", MEASURED)
     with c4:
         metric_card("首年 ROI", "約 200%",
                     "年省約 120 小時；假設可在「效益驗證」頁調整", ASSUMED)
@@ -107,7 +107,7 @@ def render() -> None:
             "本案的 SAP 匯出檔是**模擬**的（格式仿 SAP 匯出的髒檔），"
             "專案內未串接真實 SAP 系統。"
         )
-        st.link_button("在 GitHub 上看完整原始碼", GITHUB, use_container_width=True)
+        st.link_button("在 GitHub 上看完整原始碼", GITHUB, width="stretch")
 
     st.divider()
 
@@ -128,7 +128,7 @@ download-clean-summarise-email routine.
 - Warning recall **{v.warning_recall:.1%}** — {v.cm[1,1]} of {v.cm[1].sum()} degrading engines caught,
   **{v.missed} missed**; {v.false_alarms} false alarms. The model is deliberately tuned to
   prefer a false alarm over a missed failure.
-- Data processing **562× faster** — {len(preds):,} rows, 15 min manual → 1.6 s automated
+- Data processing **562× faster** — 13,750 raw rows, 15 min manual → 1.6 s automated
 - **2,001** silently miscounted rows eliminated (inconsistent status casing)
 
 **Scenario assumptions 🟡**

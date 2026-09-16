@@ -7,7 +7,8 @@
 #
 # 本機開發／重跑模型與建置腳本請用 requirements-dev.txt
 # ─────────────────────────────────────────────────────────────
-streamlit>=1.40
+streamlit>=1.63,<2   # width="stretch" 等新 API；已實測於 1.63
 numpy>=1.26
 pandas>=2.1
 altair>=5.2
+openpyxl>=3.1      # 自動化頁：產生 Excel 報表、讀取 RPA 實際產出

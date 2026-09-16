@@ -20,7 +20,7 @@ streamlit run 07-demo-app/app.py
 | 總覽 | 一頁看懂兩層浪費、資料流、關鍵數字 | 整條 bullet |
 | 即時判讀 | 拉 21 顆感測器滑桿，當場看模型判 Healthy / Warning | `VAE-based fault-detection framework` |
 | 機隊軌跡 | 13,096 筆逐筆判讀、單台退化軌跡、被漏判的 2 台 | 早期異常偵測 |
-| 自動化 | 髒匯出檔 → 清理 → 彙總 → 下載報表（P2） | `Automated reporting via RPA/Power Automate` |
+| 自動化 | 髒匯出檔 → 一鍵清理彙總 → 下載報表；與 Power Automate 實際產出逐項對照 | `Automated reporting via RPA/Power Automate` |
 | AI 助理 | 用自然語言問維修手冊與工單（P3） | `AI chatbot ... powered by RAG and an LLM API` |
 | 效益驗證 | 拉假設滑桿，看 84% / 36% / ROI 即時重算（P4） | 效益數字 |
 
@@ -64,7 +64,8 @@ mu = h @ Wmuᵀ + bmu
 ```bash
 pip install -r requirements-dev.txt          # 需要 torch
 py -3 07-demo-app/build/export_artifacts.py  # 匯出 assets/
-py -3 07-demo-app/build/verify_numpy_path.py # 驗證與既有結果一致
+py -3 07-demo-app/build/verify_numpy_path.py # 驗證模型推論與既有結果一致
+py -3 07-demo-app/build/verify_cleaning.py   # 驗證清理邏輯與 RPA 實際產出一致
 ```
 
 `verify_numpy_path.py` 是回歸測試，任何改動後都該跑。它檢查兩件事：
@@ -86,3 +87,21 @@ py -3 07-demo-app/build/verify_numpy_path.py # 驗證與既有結果一致
 
 公開資料集沒有真實成本資料，因此成本面效益一律標為情境假設，不講成實測。
 本案的 SAP 匯出檔為**模擬**檔（格式仿 SAP 匯出的髒檔），**未串接真實 SAP 系統**。
+
+---
+
+## 自動化頁為什麼跑的是 Python
+
+雲端沒有 Windows 與 Excel，VBA 巨集與 Power Automate Desktop 都無法執行。
+`core/cleaning.py` 把 `02-automation-vba/src/CleanAndSummarize.bas` 的規則逐條重現，
+`build/verify_cleaning.py` 拿 Power Automate **實際跑出的報表**
+（`03-rpa-power-automate/outbox/DailyHealthReport_20260711.xlsm`）當對照組：
+
+- run log 8 項（原始列 13,750、去重 654、乾淨列 13,096、大小寫修正 2,001、Warning 1,693、缺距離 386、缺成本 901）全數一致
+- 100 台機台彙總的讀數與警告數零差異，成本合計最大誤差 4.7e-10
+
+重現時必須照抄的 VBA 細節：`Val()` 只解析開頭數字；`status_fixed` 比的是**去空白後**的原值；
+欄位數不是 22 的列靜默丟棄但仍計入原始列；缺值與大小寫修正只統計保留下來的列。
+
+> **耗時有兩次實測**：Alt+F8 互動執行 1.6 秒（562×），經 Power Automate 無人值守執行 1.844 秒（488×）。
+> 兩者皆為真實量測，ROI 使用前者。網頁上 Python 重現的耗時不計入效益。
