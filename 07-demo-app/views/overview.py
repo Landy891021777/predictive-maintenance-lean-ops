@@ -29,8 +29,8 @@ def render() -> None:
         metric_card("快故障召回率", f"{v.warning_recall:.1%}",
                     f"{v.cm[1,1]}/{v.cm[1].sum()} 台抓到，漏判 {v.missed} 台", MEASURED)
     with c3:
-        metric_card("資料處理提速", "562×",
-                    "原始 13,750 列：手動 15 分 → 自動 1.6 秒", MEASURED)
+        metric_card("資料處理提速", "約 500×",
+                    "原始 13,750 列：手動 15 分 → 自動約 1.6–1.8 秒", MEASURED)
     with c4:
         metric_card("首年 ROI", "約 200%",
                     "年省約 120 小時；假設可在「效益驗證」頁調整", ASSUMED)
@@ -128,7 +128,8 @@ download-clean-summarise-email routine.
 - Warning recall **{v.warning_recall:.1%}** — {v.cm[1,1]} of {v.cm[1].sum()} degrading engines caught,
   **{v.missed} missed**; {v.false_alarms} false alarms. The model is deliberately tuned to
   prefer a false alarm over a missed failure.
-- Data processing **562× faster** — 13,750 raw rows, 15 min manual → 1.6 s automated
+- Data processing **~500× faster** — 13,750 raw rows, 15 min manual → 1.6–1.8 s automated
+  (two measured runs: 562× interactive, 488× via Power Automate)
 - **2,001** silently miscounted rows eliminated (inconsistent status casing)
 
 **Scenario assumptions 🟡**

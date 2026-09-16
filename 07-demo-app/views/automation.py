@@ -155,8 +155,9 @@ def render() -> None:
         metric_card("VBA 巨集一次", f"{VBA_INTERACTIVE} 秒",
                     f"RPA 無人值守執行實測 {rpa_seconds:.3f} 秒", MEASURED)
     with c3:
-        metric_card("提速倍數", f"{MANUAL_SECONDS / VBA_INTERACTIVE:.0f}×",
-                    f"以 RPA 那次計為 {MANUAL_SECONDS / rpa_seconds:.0f}×", MEASURED)
+        metric_card("提速倍數", "約 500×",
+                    f"兩次實測：互動 {MANUAL_SECONDS / VBA_INTERACTIVE:.0f}×／"
+                    f"RPA {MANUAL_SECONDS / rpa_seconds:.0f}×", MEASURED)
     with c4:
         metric_card("消除的靜默錯誤", f"{rpa['Status case normalized']:,} 筆",
                     f"另去除重複列 {rpa['Duplicate rows removed']} 筆", MEASURED)
