@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import altair as alt
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -139,10 +140,27 @@ def render() -> None:
                 "NearestDistance": st.column_config.NumberColumn("最近距離", format="%.4f"),
             },
         )
-        missed_ids = vt.loc[vt["結果"] == "漏判", "EquipmentID"].tolist()
+        missed = vt[vt["結果"] == "漏判"].sort_values("TrueRUL")
+        # 真實標籤的分界＝TrueRUL 的 33% 分位數（不寫死，直接由資料算）
+        cut = float(np.quantile(vt["TrueRUL"], 0.33))
+        st.markdown("##### 這兩台漏判不一樣，值得分開看")
+        for _, r in missed.iterrows():
+            gap = cut - r["TrueRUL"]
+            if gap < 5:
+                st.markdown(
+                    f"- **{r['EquipmentID']}**（真實剩餘壽命 {int(r['TrueRUL'])} cycles）—— "
+                    f"**標籤邊界效應**。真實標籤的分界是 {cut:.1f} cycles，這台只比分界線內側少 "
+                    f"{gap:.1f} 個 cycle。分位數往任何一邊挪一點，它就不算錯了。"
+                )
+            else:
+                st.markdown(
+                    f"- **{r['EquipmentID']}**（真實剩餘壽命 {int(r['TrueRUL'])} cycles）—— "
+                    f"**真正的漏判**。離分界線 {gap:.1f} 個 cycle，不是邊界問題；"
+                    "它的讀數在潛空間裡仍落在健康樣本附近，模型沒看出退化。"
+                )
         st.caption(
-            f"被漏判的是 **{'、'.join(missed_ids)}**。可以到「單台引擎軌跡」分頁輸入這幾台，"
-            "看它們為什麼沒被抓出來 —— 它們的讀數在潛空間裡仍落在健康樣本附近。"
+            "可以到「單台引擎軌跡」分頁選這兩台，對照它們的退化曲線與潛空間路徑；"
+            "也可以到「即時判讀」頁載入它們的最後一個 cycle，親自確認模型判成 Healthy。"
         )
 
     # ---------------- 混淆矩陣 ----------------
