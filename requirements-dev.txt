@@ -1,0 +1,13 @@
+# ─────────────────────────────────────────────────────────────
+# 本機開發相依（線上不需要）
+#
+# 用於：重跑 01-core-model/scoring/score_engines.py、
+#      重新匯出 07-demo-app/assets/、執行 notebook、產生模擬資料
+# ─────────────────────────────────────────────────────────────
+-r requirements.txt
+
+torch            # VAE 訓練與權重匯出（僅離線）
+scikit-learn     # MinMaxScaler / train_test_split / 評估指標
+matplotlib       # notebook 繪圖
+openpyxl         # ROI 試算表與模擬資料產生
+mcp              # 01-core-model/server/vae_mcp_server.py

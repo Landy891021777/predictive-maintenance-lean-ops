@@ -50,6 +50,7 @@ NASA CMAPSS 真實感測資料
 | [`04-powerapps-design/`](04-powerapps-design/) | 現場查詢 App 線框圖 + 畫面規格 | PowerAPPS, solutions developer |
 | [`05-powerbi-dashboard/`](05-powerbi-dashboard/) | Power BI 儀表板：KPI、健康趨勢、HK 分層看板 | PowerBI, HK BI, dashboard |
 | [`06-lean-lss/`](06-lean-lss/) | DMAIC、價值流圖、ROI 效益驗證 | Lean/LSS, benefit validator, ROI |
+| [`07-demo-app/`](07-demo-app/) | 互動展示網站：即時判讀、自動化、RAG 問答、效益試算 | Python, RAG, prompt engineering |
 | [`docs/`](docs/) | STAR 面試小抄、設計規格 | — |
 
 ---
@@ -88,8 +89,9 @@ ROI 模型（[`06-lean-lss/roi-validation.xlsx`](06-lean-lss/)）把假設做成
 - [x] P3 RPA（Power Automate Desktop，端到端已驗證）
 - [x] P4 Power Apps 設計稿（3 畫面線框圖）
 - [x] P5 Power BI 儀表板（HK 三層看板）
-- [x] P6 ROI 效益驗證（年省約 539 小時）
+- [x] P6 ROI 效益驗證（假設校準後：年省約 120 小時、首年 ROI 約 200%）
 - [x] P7 收尾（面試小抄）
+- [ ] P8 互動展示網站（`07-demo-app/`，建置中）
 
 ## 🔑 關鍵成果（實測🟢 / 假設🟡）
 
@@ -98,4 +100,4 @@ ROI 模型（[`06-lean-lss/roi-validation.xlsx`](06-lean-lss/)）把假設做成
 | 模型準確率 / 快故障召回 | 85.0% / 93.9% | 🟢 |
 | 手動→自動處理時間（13,096 列） | 15 分 → 1.6 秒（562×） | 🟢 |
 | 消除的靜默資料錯誤 | 去重 654 + 大小寫 2,001 筆 | 🟢 |
-| 年省工時 / 首年 ROI | ~539 小時 / ~1,248% | 🟡 假設可替換 |
+| 年省工時 / 首年 ROI | ~120 小時 / ~200% | 🟡 假設可替換 |

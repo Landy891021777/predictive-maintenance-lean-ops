@@ -23,3 +23,6 @@ desktop.ini
 # 大型資料集（保留 sample-data 內的小樣本）
 data/raw/
 *.zip
+
+# Streamlit
+.streamlit/secrets.toml

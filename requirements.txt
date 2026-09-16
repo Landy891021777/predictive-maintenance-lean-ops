@@ -1,12 +1,13 @@
-# 核心模型與資料處理
-torch
-numpy
-pandas
-scikit-learn
-matplotlib
-
-# MCP server
-mcp
-
-# Excel / 資料產生（VBA 階段的模擬資料產生腳本用）
-openpyxl
+# ─────────────────────────────────────────────────────────────
+# 線上執行相依（Streamlit Community Cloud 就是安裝這一份）
+#
+# 刻意不含 PyTorch：VAE 權重已由 07-demo-app/build/export_artifacts.py
+# 匯出成 NumPy 陣列，線上以純 NumPy 推論。這能避免雲端安裝 torch 時
+# 抓到 CUDA 版 wheel（2GB+）而部署失敗或記憶體超標。
+#
+# 本機開發／重跑模型與建置腳本請用 requirements-dev.txt
+# ─────────────────────────────────────────────────────────────
+streamlit>=1.40
+numpy>=1.26
+pandas>=2.1
+altair>=5.2
