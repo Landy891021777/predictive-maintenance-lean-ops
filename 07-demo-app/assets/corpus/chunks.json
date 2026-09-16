@@ -1,0 +1,1232 @@
+[
+ {
+  "id": "manual-01",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "1. 適用範圍與使用說明",
+  "kind": "simulated",
+  "text": "本手冊適用於本機隊 100 台渦扇引擎（ENG-001 至 ENG-100）的健康監測與維修作業。\n機隊運轉條件為單一飛行條件（海平面），主要失效模式為高壓壓縮機（HPC）性能衰退，\n對應 NASA CMAPSS FD001 資料集的設定。\n\n每台引擎每個運轉週期（cycle）回傳一筆讀數，共 21 個感測器。其中 6 個感測器在本機隊全程為定值、不具監測價值，\n其餘感測器的正常範圍與退化趨勢見第 2 章。健康狀態由 VAE 模型自動判讀（見第 3 章），\n判為 Warning 時依《異常處置 SOP》分級處理。",
+  "source": "本手冊為模擬文件；運轉條件與失效模式依 CMAPSS FD001 資料集說明",
+  "engines": []
+ },
+ {
+  "id": "manual-02",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.1 溫度類感測器",
+  "kind": "simulated",
+  "text": "本節列出溫度類感測器的定義、正常範圍與退化趨勢。\n- Sensor 2（T24，低壓壓縮機（LPC）出口總溫，單位 °R）：正常範圍 641.6 – 643.9（中位數 642.6）；引擎越接近故障，讀數明顯上升（與剩餘壽命相關係數 -0.61）。\n- Sensor 3（T30，高壓壓縮機（HPC）出口總溫，單位 °R）：正常範圍 1578 – 1606（中位數 1590）；引擎越接近故障，讀數中度上升（與剩餘壽命相關係數 -0.58）。\n- Sensor 4（T50，低壓渦輪（LPT）出口總溫，單位 °R）：正常範圍 1392 – 1432（中位數 1408）；引擎越接近故障，讀數明顯上升（與剩餘壽命相關係數 -0.68）。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-03",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.2 壓力類感測器",
+  "kind": "simulated",
+  "text": "本節列出壓力類感測器的定義、正常範圍與退化趨勢。\n- Sensor 6（P15，旁通道總壓，單位 psia）：正常範圍 21.6 – 21.61（中位數 21.61）；與退化程度幾乎無關，僅作輔助參考。\n- Sensor 7（P30，高壓壓縮機出口總壓，單位 psia）：正常範圍 551.2 – 555.1（中位數 553.4）；引擎越接近故障，讀數明顯下降（與剩餘壽命相關係數 +0.66）。\n- Sensor 11（Ps30，高壓壓縮機出口靜壓，單位 psia）：正常範圍 47.05 – 48.21（中位數 47.51）；引擎越接近故障，讀數明顯上升（與剩餘壽命相關係數 -0.70）。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-04",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.3 轉速類感測器",
+  "kind": "simulated",
+  "text": "本節列出轉速類感測器的定義、正常範圍與退化趨勢。\n- Sensor 8（Nf，風扇實際轉速，單位 rpm）：正常範圍 2388 – 2388（中位數 2388）；引擎越接近故障，讀數中度上升（與剩餘壽命相關係數 -0.56）。\n- Sensor 9（Nc，核心實際轉速，單位 rpm）：正常範圍 9036 – 9155（中位數 9061）；引擎越接近故障，讀數中度上升（與剩餘壽命相關係數 -0.39）。\n- Sensor 13（NRf，修正風扇轉速，單位 rpm）：正常範圍 2388 – 2388（中位數 2388）；引擎越接近故障，讀數中度上升（與剩餘壽命相關係數 -0.56）。\n- Sensor 14（NRc，修正核心轉速，單位 rpm）：正常範圍 8115 – 8220（中位數 8141）；引擎越接近故障，讀數中度上升（與剩餘壽命相關係數 -0.31）。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-05",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.4 流量與比值類感測器",
+  "kind": "simulated",
+  "text": "本節列出流量與比值類感測器的定義、正常範圍與退化趨勢。\n- Sensor 12（phi，燃油流量與 Ps30 之比，單位 pps/psi）：正常範圍 519.5 – 522.8（中位數 521.5）；引擎越接近故障，讀數明顯下降（與剩餘壽命相關係數 +0.67）。\n- Sensor 15（BPR，旁通比，單位 —）：正常範圍 8.368 – 8.535（中位數 8.439）；引擎越接近故障，讀數明顯上升（與剩餘壽命相關係數 -0.64）。\n- Sensor 17（htBleed，引氣焓值，單位 —）：正常範圍 390 – 397（中位數 393）；引擎越接近故障，讀數明顯上升（與剩餘壽命相關係數 -0.61）。\n- Sensor 20（W31，高壓渦輪冷卻引氣流量，單位 lbm/s）：正常範圍 38.37 – 39.18（中位數 38.83）；引擎越接近故障，讀數明顯下降（與剩餘壽命相關係數 +0.63）。\n- Sensor 21（W32，低壓渦輪冷卻引氣流量，單位 lbm/s）：正常範圍 23.02 – 23.51（中位數 23.3）；引擎越接近故障，讀數明顯下降（與剩餘壽命相關係數 +0.64）。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-06",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.5 不具監測價值的定值感測器",
+  "kind": "simulated",
+  "text": "以下感測器在本機隊全程為定值，無法反映健康變化，巡檢時不需判讀：\n- Sensor 1（T2，風扇入口總溫）\n- Sensor 5（P2，風扇入口壓力）\n- Sensor 10（epr，引擎壓力比（P50/P2））\n- Sensor 16（farB，燃燒室油氣比）\n- Sensor 18（Nf_dmd，需求風扇轉速）\n- Sensor 19（PCNfR_dmd，需求修正風扇轉速）\n模型輸入仍包含這些欄位以維持 21 維格式，但它們對判讀沒有貢獻。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-07",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "2.6 高壓壓縮機衰退的典型徵兆",
+  "kind": "simulated",
+  "text": "高壓壓縮機（HPC）性能衰退時，最具代表性的感測器變化（依與剩餘壽命的相關程度排序）：\n- Sensor 11（Ps30，高壓壓縮機出口靜壓）上升（r = -0.70）\n- Sensor 4（T50，低壓渦輪（LPT）出口總溫）上升（r = -0.68）\n- Sensor 12（phi，燃油流量與 Ps30 之比）下降（r = +0.67）\n- Sensor 7（P30，高壓壓縮機出口總壓）下降（r = +0.66）\n- Sensor 15（BPR，旁通比）上升（r = -0.64）\n- Sensor 21（W32，低壓渦輪冷卻引氣流量）下降（r = +0.64）\n- Sensor 20（W31，高壓渦輪冷卻引氣流量）下降（r = +0.63）\n- Sensor 2（T24，低壓壓縮機（LPC）出口總溫）上升（r = -0.61）\n- Sensor 17（htBleed，引氣焓值）上升（r = -0.61）\n單一感測器偏離正常範圍不一定代表故障；應以模型綜合判讀與連續讀數趨勢為準。",
+  "source": "感測器名稱與單位依 NASA CMAPSS 公開文件；正常範圍與退化趨勢由 train_FD001 實際計算",
+  "engines": []
+ },
+ {
+  "id": "manual-08",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "3. 健康狀態自動判讀原理",
+  "kind": "simulated",
+  "text": "每筆讀數由 VAE（變分自編碼器）模型自動判讀為 Healthy 或 Warning：\n1. 21 個感測值經 MinMaxScaler 正規化\n2. VAE encoder 將讀數壓縮為 2 維潛空間座標\n3. 在 14,441 筆歷史訓練讀數中找出潛空間距離最近的一筆（1-NN）\n4. 若該筆歷史讀數當時的剩餘壽命 ≤ 67 cycles，判為 Warning，否則為 Healthy\n\n「最近距離」越大，代表這筆讀數越不像任何已知的歷史讀數，可作為判讀信心的參考。\n模型特性是偏向寧可誤報、不要漏判，因此 Warning 需經覆核（見《異常處置 SOP》）。",
+  "source": "判讀規則與 01-core-model/scoring/score_engines.py 相同；本手冊為模擬文件",
+  "engines": []
+ },
+ {
+  "id": "manual-09",
+  "doc": "manual",
+  "doc_title": "渦扇引擎健康監測維修手冊（模擬）",
+  "section": "4. 定期巡檢項目",
+  "kind": "simulated",
+  "text": "不論模型判讀結果為何，每台引擎仍需執行定期巡檢，以涵蓋模型可能漏判的情況：\n- 每 50 cycles：目視檢查壓縮機葉片、確認感測器接線與讀值合理性\n- 每 100 cycles：比對 Sensor 4、Sensor 11、Sensor 7 與正常範圍，記錄趨勢\n- 任何 cycle 若有感測器讀值超出第 2 章正常範圍 25% 以上，視為感測器異常，先排除儀器問題再判讀健康狀態\n巡檢結果記錄於交接班紀錄。",
+  "source": "巡檢週期與項目為模擬的作業規範",
+  "engines": []
+ },
+ {
+  "id": "sop-01",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "1. 目的與分級原則",
+  "kind": "simulated",
+  "text": "本 SOP 規範模型判讀為 Warning 時的處置流程。分級不看單一讀數，而看**最近 10 筆讀數中的 Warning 筆數**，\n理由是單筆讀數容易受雜訊影響，連續趨勢才能反映真實退化：\n- L1 觀察：最近 10 筆中有 1–2 筆 Warning\n- L2 排程檢查：最近 10 筆中有 3–6 筆 Warning\n- L3 停機檢查：最近 10 筆中有 7 筆以上 Warning",
+  "source": "分級門檻為模擬 SOP 事先訂定，未針對資料調整",
+  "engines": []
+ },
+ {
+  "id": "sop-02",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "2. L1 觀察：處置步驟",
+  "kind": "simulated",
+  "text": "1. 於交接班紀錄登記引擎編號、cycle 與最近距離\n2. 不開立工單，不影響運轉排程\n3. 下一班次確認 Warning 是否持續；若升級至 L2 則依第 3 節處理\n4. 若同一引擎 L1 反覆出現但始終未達 L2，於週會提出討論",
+  "source": "模擬的作業流程",
+  "engines": []
+ },
+ {
+  "id": "sop-03",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "3. L2 排程檢查：處置步驟",
+  "kind": "simulated",
+  "text": "1. 開立「排程檢查」工單，處置時限 72 小時內\n2. 調閱該引擎最近 50 筆讀數，確認溫度類（Sensor 2/3/4）與壓力類（Sensor 7/11）是否呈退化趨勢\n3. 覆核是否為誤報：模型偏向寧可誤報，L2 中有相當比例並非真正退化\n4. 覆核確認退化 → 安排下一次停機窗口檢查高壓壓縮機；確認非退化 → 註記為誤報並結案",
+  "source": "模擬的作業流程",
+  "engines": []
+ },
+ {
+  "id": "sop-04",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "4. L3 停機檢查：處置步驟",
+  "kind": "simulated",
+  "text": "1. 立即通報維運主管，開立「停機檢查」工單，處置時限 24 小時內\n2. 安排引擎退出運轉，執行高壓壓縮機內視鏡檢查\n3. 檢查結果登錄於工單；更換零件或返修需主管簽核\n4. 復機後前 20 cycles 列為加強監測，每班次回報判讀結果",
+  "source": "模擬的作業流程",
+  "engines": []
+ },
+ {
+  "id": "sop-05",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "5. 為什麼要看連續讀數：誤報與漏判的處理",
+  "kind": "simulated",
+  "text": "模型在單筆讀數上的特性是寧可誤報、不要漏判：以每台引擎最後一筆讀數評估，\nWarning 的召回率 93.9%、精確率 70.5%（見模型卡）。因此：\n- 誤報較多 → L2 必須人工覆核，不直接停機\n- 仍有漏判 → 定期巡檢（維修手冊第 4 章）不可省略\n\n在本機隊的判讀紀錄中，依本 SOP 分級：共 61 台引擎曾觸發 L2、33 台曾觸發 L3。",
+  "source": "觸發台數由 01-core-model/outputs/model_predictions.csv 依本 SOP 門檻實際計算",
+  "engines": []
+ },
+ {
+  "id": "sop-06",
+  "doc": "sop",
+  "doc_title": "異常處置標準作業程序（SOP，模擬）",
+  "section": "6. 通報與權責",
+  "kind": "simulated",
+  "text": "- L1：當班技術員記錄即可\n- L2：當班技術員開立工單，維修工程師 72 小時內覆核\n- L3：當班技術員立即通報維運主管，主管核准停機；維修工程師 24 小時內完成檢查\n- 所有工單結案需填寫：處置結果、是否為誤報、是否更換零件",
+  "source": "模擬的權責分工",
+  "engines": []
+ },
+ {
+  "id": "work_orders-01",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0001 ENG-085",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0001\n引擎：ENG-085\n目前等級：L2 排程檢查\n開單：cycle 6（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 2\n整個觀測期共 34 筆讀數，其中 5 筆判為 Warning\n最後一筆讀數：cycle 34，判讀 Healthy，最近距離 0.0016\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 34 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-085"
+  ]
+ },
+ {
+  "id": "work_orders-02",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0002 ENG-002",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0002\n引擎：ENG-002\n目前等級：L2 排程檢查\n開單：cycle 10（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 2\n整個觀測期共 49 筆讀數，其中 7 筆判為 Warning\n最後一筆讀數：cycle 49，判讀 Healthy，最近距離 0.0010\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 49 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-002"
+  ]
+ },
+ {
+  "id": "work_orders-03",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0003 ENG-005",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0003\n引擎：ENG-005\n目前等級：L2 排程檢查\n開單：cycle 10（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 1\n整個觀測期共 98 筆讀數，其中 10 筆判為 Warning\n最後一筆讀數：cycle 98，判讀 Healthy，最近距離 0.0029\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 98 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-005"
+  ]
+ },
+ {
+  "id": "work_orders-04",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0004 ENG-035",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0004\n引擎：ENG-035\n目前等級：L3 停機檢查\n開單：cycle 11（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 148（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 3\n整個觀測期共 198 筆讀數，其中 74 筆判為 Warning\n最後一筆讀數：cycle 198，判讀 Warning，最近距離 0.0089\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 198 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-035"
+  ]
+ },
+ {
+  "id": "work_orders-05",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0005 ENG-056",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0005\n引擎：ENG-056\n目前等級：L3 停機檢查\n開單：cycle 12（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 86（匯出日 2026-07-02），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 4\n整個觀測期共 136 筆讀數，其中 64 筆判為 Warning\n最後一筆讀數：cycle 136，判讀 Warning，最近距離 0.0231\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 136 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-056"
+  ]
+ },
+ {
+  "id": "work_orders-06",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0006 ENG-033",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0006\n引擎：ENG-033\n目前等級：L2 排程檢查\n開單：cycle 19（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 12\n整個觀測期共 50 筆讀數，其中 11 筆判為 Warning\n最後一筆讀數：cycle 50，判讀 Healthy，最近距離 0.0024\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 50 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-033"
+  ]
+ },
+ {
+  "id": "work_orders-07",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0007 ENG-040",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0007\n引擎：ENG-040\n目前等級：L3 停機檢查\n開單：cycle 23（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 72（匯出日 2026-07-02），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 16\n整個觀測期共 133 筆讀數，其中 51 筆判為 Warning\n最後一筆讀數：cycle 133，判讀 Warning，最近距離 0.0082\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 133 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-040"
+  ]
+ },
+ {
+  "id": "work_orders-08",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0008 ENG-036",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0008\n引擎：ENG-036\n目前等級：L3 停機檢查\n開單：cycle 28（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 92（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 12\n整個觀測期共 126 筆讀數，其中 55 筆判為 Warning\n最後一筆讀數：cycle 126，判讀 Warning，最近距離 0.0087\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 126 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-036"
+  ]
+ },
+ {
+  "id": "work_orders-09",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0009 ENG-080",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0009\n引擎：ENG-080\n目前等級：L2 排程檢查\n開單：cycle 28（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 20\n整個觀測期共 133 筆讀數，其中 18 筆判為 Warning\n最後一筆讀數：cycle 133，判讀 Healthy，最近距離 0.0015\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 133 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-080"
+  ]
+ },
+ {
+  "id": "work_orders-10",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0010 ENG-006",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0010\n引擎：ENG-006\n目前等級：L2 排程檢查\n開單：cycle 31（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 7\n整個觀測期共 105 筆讀數，其中 8 筆判為 Warning\n最後一筆讀數：cycle 105，判讀 Healthy，最近距離 0.0018\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 105 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-006"
+  ]
+ },
+ {
+  "id": "work_orders-11",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0011 ENG-066",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0011\n引擎：ENG-066\n目前等級：L3 停機檢查\n開單：cycle 35（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 96（匯出日 2026-07-02），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 7\n整個觀測期共 147 筆讀數，其中 62 筆判為 Warning\n最後一筆讀數：cycle 147，判讀 Warning，最近距離 0.0172\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 147 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-066"
+  ]
+ },
+ {
+  "id": "work_orders-12",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0012 ENG-098",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0012\n引擎：ENG-098\n目前等級：L2 排程檢查\n開單：cycle 35（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 31\n整個觀測期共 121 筆讀數，其中 16 筆判為 Warning\n最後一筆讀數：cycle 121，判讀 Warning，最近距離 0.0021\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 121 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-098"
+  ]
+ },
+ {
+  "id": "work_orders-13",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0013 ENG-038",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0013\n引擎：ENG-038\n目前等級：L3 停機檢查\n開單：cycle 35（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 122（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 10\n整個觀測期共 125 筆讀數，其中 35 筆判為 Warning\n最後一筆讀數：cycle 125，判讀 Warning，最近距離 0.0030\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 125 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-038"
+  ]
+ },
+ {
+  "id": "work_orders-14",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0014 ENG-057",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0014\n引擎：ENG-057\n目前等級：L2 排程檢查\n開單：cycle 37（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 20\n整個觀測期共 160 筆讀數，其中 12 筆判為 Warning\n最後一筆讀數：cycle 160，判讀 Warning，最近距離 0.0023\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 160 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-057"
+  ]
+ },
+ {
+  "id": "work_orders-15",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0015 ENG-086",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0015\n引擎：ENG-086\n目前等級：L2 排程檢查\n開單：cycle 43（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 9\n整個觀測期共 110 筆讀數，其中 13 筆判為 Warning\n最後一筆讀數：cycle 110，判讀 Healthy，最近距離 0.0035\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 110 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-086"
+  ]
+ },
+ {
+  "id": "work_orders-16",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0016 ENG-094",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0016\n引擎：ENG-094\n目前等級：L2 排程檢查\n開單：cycle 47（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 17\n整個觀測期共 133 筆讀數，其中 28 筆判為 Warning\n最後一筆讀數：cycle 133，判讀 Warning，最近距離 0.0020\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 133 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-094"
+  ]
+ },
+ {
+  "id": "work_orders-17",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0017 ENG-074",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0017\n引擎：ENG-074\n目前等級：L2 排程檢查\n開單：cycle 48（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 4\n整個觀測期共 137 筆讀數，其中 17 筆判為 Warning\n最後一筆讀數：cycle 137，判讀 Healthy，最近距離 0.0030\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 137 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-074"
+  ]
+ },
+ {
+  "id": "work_orders-18",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0018 ENG-063",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0018\n引擎：ENG-063\n目前等級：L2 排程檢查\n開單：cycle 57（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 1\n整個觀測期共 155 筆讀數，其中 20 筆判為 Warning\n最後一筆讀數：cycle 155，判讀 Warning，最近距離 0.0048\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 155 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-063"
+  ]
+ },
+ {
+  "id": "work_orders-19",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0019 ENG-093",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0019\n引擎：ENG-093\n目前等級：L3 停機檢查\n開單：cycle 59（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 223（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 2\n整個觀測期共 244 筆讀數，其中 65 筆判為 Warning\n最後一筆讀數：cycle 244，判讀 Warning，最近距離 0.0122\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 244 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-093"
+  ]
+ },
+ {
+  "id": "work_orders-20",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0020 ENG-011",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0020\n引擎：ENG-011\n目前等級：L2 排程檢查\n開單：cycle 60（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 12\n整個觀測期共 83 筆讀數，其中 15 筆判為 Warning\n最後一筆讀數：cycle 83，判讀 Healthy，最近距離 0.0229\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 83 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-011"
+  ]
+ },
+ {
+  "id": "work_orders-21",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0021 ENG-046",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0021\n引擎：ENG-046\n目前等級：L3 停機檢查\n開單：cycle 62（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 119（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 6\n整個觀測期共 146 筆讀數，其中 39 筆判為 Warning\n最後一筆讀數：cycle 146，判讀 Warning，最近距離 0.0042\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 146 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-046"
+  ]
+ },
+ {
+  "id": "work_orders-22",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0022 ENG-004",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0022\n引擎：ENG-004\n目前等級：L2 排程檢查\n開單：cycle 65（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 59\n整個觀測期共 106 筆讀數，其中 5 筆判為 Warning\n最後一筆讀數：cycle 106，判讀 Healthy，最近距離 0.0016\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 106 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-004"
+  ]
+ },
+ {
+  "id": "work_orders-23",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0023 ENG-091",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0023\n引擎：ENG-091\n目前等級：L3 停機檢查\n開單：cycle 76（匯出日 2026-07-01），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 182（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 9\n整個觀測期共 234 筆讀數，其中 88 筆判為 Warning\n最後一筆讀數：cycle 234，判讀 Warning，最近距離 0.0016\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 234 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-091"
+  ]
+ },
+ {
+  "id": "work_orders-24",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0024 ENG-092",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0024\n引擎：ENG-092\n目前等級：L3 停機檢查\n開單：cycle 77（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 125（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 24\n整個觀測期共 150 筆讀數，其中 53 筆判為 Warning\n最後一筆讀數：cycle 150，判讀 Warning，最近距離 0.0248\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 150 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-092"
+  ]
+ },
+ {
+  "id": "work_orders-25",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0025 ENG-075",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0025\n引擎：ENG-075\n目前等級：L2 排程檢查\n開單：cycle 82（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 26\n整個觀測期共 88 筆讀數，其中 4 筆判為 Warning\n最後一筆讀數：cycle 88，判讀 Healthy，最近距離 0.0015\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 88 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-075"
+  ]
+ },
+ {
+  "id": "work_orders-26",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0026 ENG-082",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0026\n引擎：ENG-082\n目前等級：L3 停機檢查\n開單：cycle 93（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 143（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 51\n整個觀測期共 162 筆讀數，其中 35 筆判為 Warning\n最後一筆讀數：cycle 162，判讀 Warning，最近距離 0.0062\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 162 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-082"
+  ]
+ },
+ {
+  "id": "work_orders-27",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0027 ENG-045",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0027\n引擎：ENG-045\n目前等級：L2 排程檢查\n開單：cycle 99（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 15\n整個觀測期共 152 筆讀數，其中 22 筆判為 Warning\n最後一筆讀數：cycle 152，判讀 Healthy，最近距離 0.0033\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 152 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-045"
+  ]
+ },
+ {
+  "id": "work_orders-28",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0028 ENG-070",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0028\n引擎：ENG-070\n目前等級：L2 排程檢查\n開單：cycle 108（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 56\n整個觀測期共 152 筆讀數，其中 8 筆判為 Warning\n最後一筆讀數：cycle 152，判讀 Healthy，最近距離 0.0014\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 152 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-070"
+  ]
+ },
+ {
+  "id": "work_orders-29",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0029 ENG-090",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0029\n引擎：ENG-090\n目前等級：L3 停機檢查\n開單：cycle 110（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 131（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 22\n整個觀測期共 146 筆讀數，其中 29 筆判為 Warning\n最後一筆讀數：cycle 146，判讀 Warning，最近距離 0.0109\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 146 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-090"
+  ]
+ },
+ {
+  "id": "work_orders-30",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0030 ENG-017",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0030\n引擎：ENG-017\n目前等級：L3 停機檢查\n開單：cycle 111（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 157（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 93\n整個觀測期共 165 筆讀數，其中 24 筆判為 Warning\n最後一筆讀數：cycle 165，判讀 Warning，最近距離 0.0193\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 165 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-017"
+  ]
+ },
+ {
+  "id": "work_orders-31",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0031 ENG-003",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0031\n引擎：ENG-003\n目前等級：L3 停機檢查\n開單：cycle 112（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 119（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 16\n整個觀測期共 126 筆讀數，其中 22 筆判為 Warning\n最後一筆讀數：cycle 126，判讀 Warning，最近距離 0.0029\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 126 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-003"
+  ]
+ },
+ {
+  "id": "work_orders-32",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0032 ENG-037",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0032\n引擎：ENG-037\n目前等級：L2 排程檢查\n開單：cycle 114（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 79\n整個觀測期共 121 筆讀數，其中 8 筆判為 Warning\n最後一筆讀數：cycle 121，判讀 Warning，最近距離 0.0047\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 121 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-037"
+  ]
+ },
+ {
+  "id": "work_orders-33",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0033 ENG-084",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0033\n引擎：ENG-084\n目前等級：L2 排程檢查\n開單：cycle 115（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 1\n整個觀測期共 172 筆讀數，其中 21 筆判為 Warning\n最後一筆讀數：cycle 172，判讀 Warning，最近距離 0.0078\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 172 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-084"
+  ]
+ },
+ {
+  "id": "work_orders-34",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0034 ENG-028",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0034\n引擎：ENG-028\n目前等級：L2 排程檢查\n開單：cycle 116（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 14\n整個觀測期共 158 筆讀數，其中 10 筆判為 Warning\n最後一筆讀數：cycle 158，判讀 Healthy，最近距離 0.0029\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 158 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-028"
+  ]
+ },
+ {
+  "id": "work_orders-35",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0035 ENG-041",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0035\n引擎：ENG-041\n目前等級：L3 停機檢查\n開單：cycle 119（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 123（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 79\n整個觀測期共 123 筆讀數，其中 9 筆判為 Warning\n最後一筆讀數：cycle 123，判讀 Warning，最近距離 0.0118\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 123 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-041"
+  ]
+ },
+ {
+  "id": "work_orders-36",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0036 ENG-061",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0036\n引擎：ENG-061\n目前等級：L3 停機檢查\n開單：cycle 121（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 156（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 95\n整個觀測期共 159 筆讀數，其中 24 筆判為 Warning\n最後一筆讀數：cycle 159，判讀 Warning，最近距離 0.0044\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 159 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-061"
+  ]
+ },
+ {
+  "id": "work_orders-37",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0037 ENG-030",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0037\n引擎：ENG-030\n目前等級：L2 排程檢查\n開單：cycle 123（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 10\n整個觀測期共 143 筆讀數，其中 13 筆判為 Warning\n最後一筆讀數：cycle 143，判讀 Warning，最近距離 0.0030\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 143 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-030"
+  ]
+ },
+ {
+  "id": "work_orders-38",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0038 ENG-018",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0038\n引擎：ENG-018\n目前等級：L2 排程檢查\n開單：cycle 127（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 86\n整個觀測期共 133 筆讀數，其中 9 筆判為 Warning\n最後一筆讀數：cycle 133，判讀 Warning，最近距離 0.0012\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 133 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-018"
+  ]
+ },
+ {
+  "id": "work_orders-39",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0039 ENG-053",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0039\n引擎：ENG-053\n目前等級：L3 停機檢查\n開單：cycle 128（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 147（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 65\n整個觀測期共 164 筆讀數，其中 30 筆判為 Warning\n最後一筆讀數：cycle 164，判讀 Warning，最近距離 0.0129\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 164 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-053"
+  ]
+ },
+ {
+  "id": "work_orders-40",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0040 ENG-081",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0040\n引擎：ENG-081\n目前等級：L3 停機檢查\n開單：cycle 128（匯出日 2026-07-02），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 166（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 72\n整個觀測期共 213 筆讀數，其中 59 筆判為 Warning\n最後一筆讀數：cycle 213，判讀 Warning，最近距離 0.0055\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 213 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-081"
+  ]
+ },
+ {
+  "id": "work_orders-41",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0041 ENG-072",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0041\n引擎：ENG-072\n目前等級：L2 排程檢查\n開單：cycle 129（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 41\n整個觀測期共 131 筆讀數，其中 5 筆判為 Warning\n最後一筆讀數：cycle 131，判讀 Healthy，最近距離 0.0051\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 131 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-072"
+  ]
+ },
+ {
+  "id": "work_orders-42",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0042 ENG-020",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0042\n引擎：ENG-020\n目前等級：L3 停機檢查\n開單：cycle 132（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 169（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 32\n整個觀測期共 184 筆讀數，其中 41 筆判為 Warning\n最後一筆讀數：cycle 184，判讀 Warning，最近距離 0.0110\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 184 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-020"
+  ]
+ },
+ {
+  "id": "work_orders-43",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0043 ENG-032",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0043\n引擎：ENG-032\n目前等級：L3 停機檢查\n開單：cycle 133（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 145（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 109\n整個觀測期共 145 筆讀數，其中 12 筆判為 Warning\n最後一筆讀數：cycle 145，判讀 Warning，最近距離 0.0179\n指派：維修工程師 ME-02\n狀態：追蹤中（資料集至 cycle 145 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-032"
+  ]
+ },
+ {
+  "id": "work_orders-44",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0044 ENG-042",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0044\n引擎：ENG-042\n目前等級：L3 停機檢查\n開單：cycle 138（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 146（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 129\n整個觀測期共 156 筆讀數，其中 19 筆判為 Warning\n最後一筆讀數：cycle 156，判讀 Warning，最近距離 0.0007\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 156 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-042"
+  ]
+ },
+ {
+  "id": "work_orders-45",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0045 ENG-064",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0045\n引擎：ENG-064\n目前等級：L3 停機檢查\n開單：cycle 138（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 159（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 54\n整個觀測期共 168 筆讀數，其中 23 筆判為 Warning\n最後一筆讀數：cycle 168，判讀 Healthy，最近距離 0.0023\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 168 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-064"
+  ]
+ },
+ {
+  "id": "work_orders-46",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0046 ENG-031",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0046\n引擎：ENG-031\n目前等級：L3 停機檢查\n開單：cycle 140（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 154（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 102\n整個觀測期共 196 筆讀數，其中 52 筆判為 Warning\n最後一筆讀數：cycle 196，判讀 Warning，最近距離 0.0097\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 196 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-031"
+  ]
+ },
+ {
+  "id": "work_orders-47",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0047 ENG-060",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0047\n引擎：ENG-060\n目前等級：L2 排程檢查\n開單：cycle 142（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 39\n整個觀測期共 147 筆讀數，其中 12 筆判為 Warning\n最後一筆讀數：cycle 147，判讀 Warning，最近距離 0.0026\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 147 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-060"
+  ]
+ },
+ {
+  "id": "work_orders-48",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0048 ENG-024",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0048\n引擎：ENG-024\n目前等級：L3 停機檢查\n開單：cycle 142（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 151（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 50\n整個觀測期共 186 筆讀數，其中 44 筆判為 Warning\n最後一筆讀數：cycle 186，判讀 Warning，最近距離 0.0856\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 186 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-024"
+  ]
+ },
+ {
+  "id": "work_orders-49",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0049 ENG-051",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0049\n引擎：ENG-051\n目前等級：L2 排程檢查\n開單：cycle 143（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 23\n整個觀測期共 144 筆讀數，其中 6 筆判為 Warning\n最後一筆讀數：cycle 144，判讀 Healthy，最近距離 0.0002\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 144 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-051"
+  ]
+ },
+ {
+  "id": "work_orders-50",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0050 ENG-068",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0050\n引擎：ENG-068\n目前等級：L3 停機檢查\n開單：cycle 143（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 152（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 31\n整個觀測期共 187 筆讀數，其中 42 筆判為 Warning\n最後一筆讀數：cycle 187，判讀 Warning，最近距離 0.0183\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 187 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-068"
+  ]
+ },
+ {
+  "id": "work_orders-51",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0051 ENG-076",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0051\n引擎：ENG-076\n目前等級：L3 停機檢查\n開單：cycle 144（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 172（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 75\n整個觀測期共 205 筆讀數，其中 48 筆判為 Warning\n最後一筆讀數：cycle 205，判讀 Warning，最近距離 0.0036\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 205 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-076"
+  ]
+ },
+ {
+  "id": "work_orders-52",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0052 ENG-077",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0052\n引擎：ENG-077\n目前等級：L3 停機檢查\n開單：cycle 148（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 153（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 71\n整個觀測期共 162 筆讀數，其中 18 筆判為 Warning\n最後一筆讀數：cycle 162，判讀 Warning，最近距離 0.0219\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 162 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-077"
+  ]
+ },
+ {
+  "id": "work_orders-53",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0053 ENG-021",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0053\n引擎：ENG-021\n目前等級：L2 排程檢查\n開單：cycle 148（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 122\n整個觀測期共 148 筆讀數，其中 5 筆判為 Warning\n最後一筆讀數：cycle 148，判讀 Warning，最近距離 0.0014\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 148 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-021"
+  ]
+ },
+ {
+  "id": "work_orders-54",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0054 ENG-100",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0054\n引擎：ENG-100\n目前等級：L3 停機檢查\n開單：cycle 151（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 168（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 145\n整個觀測期共 198 筆讀數，其中 41 筆判為 Warning\n最後一筆讀數：cycle 198，判讀 Warning，最近距離 0.0381\n指派：維修工程師 ME-06\n狀態：追蹤中（資料集至 cycle 198 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-100"
+  ]
+ },
+ {
+  "id": "work_orders-55",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0055 ENG-034",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0055\n引擎：ENG-034\n目前等級：L3 停機檢查\n開單：cycle 152（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 185（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 144\n整個觀測期共 203 筆讀數，其中 33 筆判為 Warning\n最後一筆讀數：cycle 203，判讀 Warning，最近距離 0.0103\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 203 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-034"
+  ]
+ },
+ {
+  "id": "work_orders-56",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0056 ENG-058",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0056\n引擎：ENG-058\n目前等級：L3 停機檢查\n開單：cycle 162（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 176（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 6\n整個觀測期共 176 筆讀數，其中 16 筆判為 Warning\n最後一筆讀數：cycle 176，判讀 Warning，最近距離 0.0038\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 176 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-058"
+  ]
+ },
+ {
+  "id": "work_orders-57",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0057 ENG-052",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0057\n引擎：ENG-052\n目前等級：L3 停機檢查\n開單：cycle 163（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 178（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 156\n整個觀測期共 189 筆讀數，其中 21 筆判為 Warning\n最後一筆讀數：cycle 189，判讀 Warning，最近距離 0.0326\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 189 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-052"
+  ]
+ },
+ {
+  "id": "work_orders-58",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0058 ENG-043",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0058\n引擎：ENG-043\n目前等級：L2 排程檢查\n開單：cycle 165（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 23\n整個觀測期共 172 筆讀數，其中 13 筆判為 Warning\n最後一筆讀數：cycle 172，判讀 Warning，最近距離 0.0031\n指派：維修工程師 ME-04\n狀態：追蹤中（資料集至 cycle 172 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-043"
+  ]
+ },
+ {
+  "id": "work_orders-59",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0059 ENG-012",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0059\n引擎：ENG-012\n目前等級：L2 排程檢查\n開單：cycle 205（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n首次出現 Warning：cycle 158\n整個觀測期共 217 筆讀數，其中 4 筆判為 Warning\n最後一筆讀數：cycle 217，判讀 Healthy，最近距離 0.0067\n指派：維修工程師 ME-01\n狀態：追蹤中（資料集至 cycle 217 結束，未提供後續維修結果）\n備註：最後一筆讀數判為 Healthy，但趨勢分級已觸發工單，依 SOP 仍需完成檢查，不可因單筆讀數恢復而結案。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-012"
+  ]
+ },
+ {
+  "id": "work_orders-60",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0060 ENG-062",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0060\n引擎：ENG-062\n目前等級：L3 停機檢查\n開單：cycle 213（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 221（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 204\n整個觀測期共 232 筆讀數，其中 16 筆判為 Warning\n最後一筆讀數：cycle 232，判讀 Warning，最近距離 0.0209\n指派：維修工程師 ME-05\n狀態：追蹤中（資料集至 cycle 232 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-062"
+  ]
+ },
+ {
+  "id": "work_orders-61",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "MWO-2026-0061 ENG-049",
+  "kind": "simulated",
+  "text": "工單編號：MWO-2026-0061\n引擎：ENG-049\n目前等級：L3 停機檢查\n開單：cycle 230（匯出日 2026-07-03），最近 10 筆讀數中出現 3 筆以上 Warning，觸發 L2 排程檢查\n升級：cycle 271（匯出日 2026-07-03），最近 10 筆中達 7 筆以上 Warning，升級為 L3 停機檢查\n首次出現 Warning：cycle 122\n整個觀測期共 303 筆讀數，其中 48 筆判為 Warning\n最後一筆讀數：cycle 303，判讀 Warning，最近距離 0.0119\n指派：維修工程師 ME-03\n狀態：追蹤中（資料集至 cycle 303 結束，未提供後續維修結果）",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-049"
+  ]
+ },
+ {
+  "id": "work_orders-62",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "工單總覽",
+  "kind": "simulated",
+  "text": "依《異常處置 SOP》分級，本機隊 100 台引擎中：\n- 共開立 61 張工單（曾觸發 L2 排程檢查）\n- 其中 33 張升級為 L3 停機檢查\n- 39 台引擎從未觸發 L2，未開立工單\n最早開單的是 ENG-085（cycle 6）。",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-085"
+  ]
+ },
+ {
+  "id": "work_orders-63",
+  "doc": "work_orders",
+  "doc_title": "維修工單紀錄（模擬）",
+  "section": "未開立工單的引擎清單",
+  "kind": "simulated",
+  "text": "以下 39 台引擎在整個觀測期間從未觸發 L2，因此沒有工單（其中曾出現零星 Warning、僅達 L1 觀察的有 25 台）：\nENG-001、ENG-007、ENG-008、ENG-009、ENG-010、ENG-013、ENG-014、ENG-015、ENG-016、ENG-019、ENG-022、ENG-023、ENG-025、ENG-026、ENG-027、ENG-029、ENG-039、ENG-044、ENG-047、ENG-048、ENG-050、ENG-054、ENG-055、ENG-059、ENG-065、ENG-067、ENG-069、ENG-071、ENG-073、ENG-078、ENG-079、ENG-083、ENG-087、ENG-088、ENG-089、ENG-095、ENG-096、ENG-097、ENG-099",
+  "source": "工單號與處置文字為模擬；引擎編號、觸發 cycle、Warning 筆數、最後判讀皆取自 model_predictions.csv",
+  "engines": [
+   "ENG-001",
+   "ENG-007",
+   "ENG-008",
+   "ENG-009",
+   "ENG-010",
+   "ENG-013",
+   "ENG-014",
+   "ENG-015",
+   "ENG-016",
+   "ENG-019",
+   "ENG-022",
+   "ENG-023",
+   "ENG-025",
+   "ENG-026",
+   "ENG-027",
+   "ENG-029",
+   "ENG-039",
+   "ENG-044",
+   "ENG-047",
+   "ENG-048",
+   "ENG-050",
+   "ENG-054",
+   "ENG-055",
+   "ENG-059",
+   "ENG-065",
+   "ENG-067",
+   "ENG-069",
+   "ENG-071",
+   "ENG-073",
+   "ENG-078",
+   "ENG-079",
+   "ENG-083",
+   "ENG-087",
+   "ENG-088",
+   "ENG-089",
+   "ENG-095",
+   "ENG-096",
+   "ENG-097",
+   "ENG-099"
+  ]
+ },
+ {
+  "id": "shift_logs-01",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-01 日班",
+  "kind": "simulated",
+  "text": "日期：2026-07-01　班別：日班\n新開排程檢查工單（L2）：ENG-085（cycle 6）、ENG-005（cycle 10）、ENG-035（cycle 11）、ENG-057（cycle 37）、ENG-093（cycle 59）\n另有 1 台觸發 L2，已開單。\n今日有 24 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-003、ENG-005、ENG-009、ENG-011。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-005",
+   "ENG-035",
+   "ENG-057",
+   "ENG-085",
+   "ENG-093"
+  ]
+ },
+ {
+  "id": "shift_logs-02",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-01 夜班",
+  "kind": "simulated",
+  "text": "日期：2026-07-01　班別：夜班\n新開排程檢查工單（L2）：ENG-002（cycle 10）、ENG-056（cycle 12）、ENG-040（cycle 23）、ENG-036（cycle 28）、ENG-080（cycle 28）\n另有 4 台觸發 L2，已開單。\n今日有 31 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-002、ENG-006、ENG-008、ENG-014。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-002",
+   "ENG-036",
+   "ENG-040",
+   "ENG-056",
+   "ENG-080"
+  ]
+ },
+ {
+  "id": "shift_logs-03",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-02 日班",
+  "kind": "simulated",
+  "text": "日期：2026-07-02　班別：日班\n新開排程檢查工單（L2）：ENG-033（cycle 19）、ENG-063（cycle 57）、ENG-045（cycle 99）、ENG-081（cycle 128）\n今日有 10 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-017、ENG-031、ENG-037、ENG-041。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-033",
+   "ENG-045",
+   "ENG-063",
+   "ENG-081"
+  ]
+ },
+ {
+  "id": "shift_logs-04",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-02 夜班",
+  "kind": "simulated",
+  "text": "日期：2026-07-02　班別：夜班\n【需立即處理】以下引擎升級 L3，已通報主管安排停機檢查：ENG-040（cycle 72）、ENG-056（cycle 86）、ENG-066（cycle 96）\n新開排程檢查工單（L2）：ENG-086（cycle 43）、ENG-094（cycle 47）、ENG-074（cycle 48）、ENG-046（cycle 62）、ENG-004（cycle 65）\n另有 3 台觸發 L2，已開單。\n今日有 5 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-004、ENG-018、ENG-048、ENG-070。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-004",
+   "ENG-040",
+   "ENG-046",
+   "ENG-056",
+   "ENG-066",
+   "ENG-074",
+   "ENG-086",
+   "ENG-094"
+  ]
+ },
+ {
+  "id": "shift_logs-05",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-03 日班",
+  "kind": "simulated",
+  "text": "日期：2026-07-03　班別：日班\n【需立即處理】以下引擎升級 L3，已通報主管安排停機檢查：ENG-003（cycle 119）、ENG-041（cycle 123）、ENG-053（cycle 147）、ENG-035（cycle 148）、ENG-077（cycle 153）\n另有 7 台同樣升級 L3，詳見工單清單。\n新開排程檢查工單（L2）：ENG-011（cycle 60）、ENG-075（cycle 82）、ENG-017（cycle 111）、ENG-003（cycle 112）、ENG-037（cycle 114）\n另有 9 台觸發 L2，已開單。\n今日有 8 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-007、ENG-013、ENG-021、ENG-023。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-003",
+   "ENG-011",
+   "ENG-017",
+   "ENG-035",
+   "ENG-037",
+   "ENG-041",
+   "ENG-053",
+   "ENG-075",
+   "ENG-077"
+  ]
+ },
+ {
+  "id": "shift_logs-06",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "2026-07-03 夜班",
+  "kind": "simulated",
+  "text": "日期：2026-07-03　班別：夜班\n【需立即處理】以下引擎升級 L3，已通報主管安排停機檢查：ENG-036（cycle 92）、ENG-046（cycle 119）、ENG-038（cycle 122）、ENG-092（cycle 125）、ENG-090（cycle 131）\n另有 13 台同樣升級 L3，詳見工單清單。\n新開排程檢查工單（L2）：ENG-070（cycle 108）、ENG-090（cycle 110）、ENG-028（cycle 116）、ENG-030（cycle 123）、ENG-018（cycle 127）\n另有 15 台觸發 L2，已開單。\n今日有 8 台引擎首次出現單筆 Warning，列入 L1 觀察，例如 ENG-010、ENG-012、ENG-032、ENG-034。\n交接提醒：L2 工單請下一班確認是否為誤報，模型偏向寧可誤報。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-018",
+   "ENG-028",
+   "ENG-030",
+   "ENG-036",
+   "ENG-038",
+   "ENG-046",
+   "ENG-070",
+   "ENG-090",
+   "ENG-092"
+  ]
+ },
+ {
+  "id": "shift_logs-07",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "特記事項 ENG-064",
+  "kind": "simulated",
+  "text": "日期：2026-07-03　特記事項\nENG-064 最新一筆讀數（cycle 168）判讀為 Healthy，有同仁詢問是否可以結案。\n查閱紀錄：該引擎最近 10 筆讀數中仍有 8 筆 Warning，且先前已觸發 L3（工單追蹤中）。\n依 SOP，單筆讀數恢復 Healthy 不可作為結案依據，維持原工單等級繼續檢查。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-064"
+  ]
+ },
+ {
+  "id": "shift_logs-08",
+  "doc": "shift_logs",
+  "doc_title": "交接班紀錄（模擬）",
+  "section": "特記事項 ENG-072",
+  "kind": "simulated",
+  "text": "日期：2026-07-03　特記事項\nENG-072 最新一筆讀數（cycle 131）判讀為 Healthy，有同仁詢問是否可以結案。\n查閱紀錄：該引擎最近 10 筆讀數中仍有 3 筆 Warning，且先前已觸發 L2（工單追蹤中）。\n依 SOP，單筆讀數恢復 Healthy 不可作為結案依據，維持原工單等級繼續檢查。",
+  "source": "交接內容的文字為模擬；提及的引擎、cycle、事件皆取自 model_predictions.csv 與 SOP 分級計算",
+  "engines": [
+   "ENG-072"
+  ]
+ },
+ {
+  "id": "model_card-01",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "1. 模型概要",
+  "kind": "measured",
+  "text": "模型：變分自編碼器（VAE），架構 21 → 64 → 2（潛空間）→ 64 → 21，以 PyTorch 訓練。\n資料：NASA CMAPSS FD001，訓練集 100 台引擎、20,631 筆讀數，21 個感測器。\n用途：將每筆感測讀數判讀為 Healthy 或 Warning，作為自動化報表流程的判讀引擎。\n方法：模型本身不是分類器，而是學習把高維感測訊號壓縮成有結構的 2 維表徵，\n再以最近鄰（1-NN）在表徵空間中比對 14,441 筆歷史讀數完成分類。\n這種作法適合故障樣本稀少、標註不足的情境（few-shot）。",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": []
+ },
+ {
+  "id": "model_card-02",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "2. 判讀規則與參數",
+  "kind": "measured",
+  "text": "- 前處理：MinMaxScaler，以訓練集 70% 擬合（train_test_split, test_size=0.3, random_state=42）\n- Support set：訓練集 70% 的 embedding，共 14,441 點\n- Support 標籤分界：訓練集剩餘壽命的 33% 分位數 = 67.0 cycles\n  （剩餘壽命 > 分界為 Healthy，≤ 分界為 Warning）\n- 判讀：取潛空間中最近的 support 點標籤",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": []
+ },
+ {
+  "id": "model_card-03",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "3. 評估方法",
+  "kind": "measured",
+  "text": "評估對象：test_FD001 中每台引擎的最後一個 cycle，共 100 台。\n這是 CMAPSS 的標準評估法，因為 RUL_FD001 只提供最後那一點的真實剩餘壽命。\n真實標籤分界：RUL_FD001 的 33% 分位數 = 52.7 cycles。\n兩個分界各自在自己的分佈上計算，互不洩漏。\n逐筆判讀的 13,096 筆讀數（model_predictions.csv）不含真實答案，是模擬營運系統的輸出。",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": []
+ },
+ {
+  "id": "model_card-04",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "4. 評估結果",
+  "kind": "measured",
+  "text": "Accuracy = 0.8500\n混淆矩陣（列為實際、欄為預測）：\n- 實際 Healthy：預測 Healthy 54 台、預測 Warning 13 台（誤報）\n- 實際 Warning：預測 Healthy 2 台（漏判）、預測 Warning 31 台\nWarning 類：precision 0.7045、recall 0.9394\nHealthy 類：precision 0.9643、recall 0.8060\n模型偏向寧可誤報、不要漏判：誤報一次的代價是多做一次檢查，漏判一次的代價是引擎沒被預警就故障。",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": []
+ },
+ {
+  "id": "model_card-05",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "5. 已知錯誤：漏判與誤報",
+  "kind": "measured",
+  "text": "漏判 2 台（最後一筆讀數被判為 Healthy）：\n- ENG-064：最後 cycle 168，真實剩餘壽命 28 cycles。真正的漏判：離分界線 24.7 個 cycle，讀數在潛空間中仍落在健康樣本附近。\n- ENG-072：最後 cycle 131，真實剩餘壽命 50 cycles。標籤邊界效應：只比分界線內側少 2.7 個 cycle，分位數稍微移動就不算錯。\n誤報 13 台：ENG-003、ENG-007、ENG-021、ENG-030、ENG-043、ENG-057、ENG-060、ENG-062、ENG-063、ENG-084、ENG-093、ENG-094、ENG-098。",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": [
+   "ENG-003",
+   "ENG-007",
+   "ENG-021",
+   "ENG-030",
+   "ENG-043",
+   "ENG-057",
+   "ENG-060",
+   "ENG-062",
+   "ENG-063",
+   "ENG-064",
+   "ENG-072",
+   "ENG-084",
+   "ENG-093",
+   "ENG-094",
+   "ENG-098"
+  ]
+ },
+ {
+  "id": "model_card-06",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "6. 補充觀察：看連續讀數而非單筆讀數",
+  "kind": "measured",
+  "text": "若不看最後一筆讀數，而是套用《異常處置 SOP》的趨勢分級（最近 10 筆中 Warning 筆數），\n在同一份測試資料上觀察到：\n- 真實標籤為 Warning 的 33 台引擎，有 33 台曾觸發 L2（≥3 筆），包含上述兩台漏判引擎\n- 觸發 L3（≥7 筆）的 33 台中，30 台真實標籤為 Warning、3 台為 Healthy\n限制：分級門檻雖為事先訂定，但此觀察與模型評估使用同一份測試資料，且比較的是「整個觀測期」\n與「最後一筆」兩種不同的評估方式，屬事後觀察，未經獨立資料驗證，不應視為模型效能指標。",
+  "source": "由 model_predictions.csv 依 SOP 門檻計算，並對照 model_validation.csv 的真實標籤",
+  "engines": []
+ },
+ {
+  "id": "model_card-07",
+  "doc": "model_card",
+  "doc_title": "VAE 異常偵測模型卡",
+  "section": "7. 限制與部署",
+  "kind": "measured",
+  "text": "限制：\n- 僅在 FD001（單一運轉條件、單一失效模式）上訓練與評估，未驗證於多工況資料\n- 公開模擬資料集，無真實維修成本資料；成本效益（維護成本 −84%、停機 −36%）為情境推估\n- 二分類是刻意的設計取捨：現場需要的是「要不要處理」的決策，而非精確的剩餘壽命數字\n部署：\n- 網站上的即時判讀以純 NumPy 重算 VAE，權重自 PyTorch 匯出\n- NumPy 版與 PyTorch 版最大絕對誤差 7.2e-07，\n  並驗證可逐格重現上述評估結果與 13,096 筆逐筆判讀",
+  "source": "01-core-model/outputs/model_validation.csv、07-demo-app/assets/meta.json（實測）",
+  "engines": []
+ },
+ {
+  "id": "lean-01",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "1. 問題定義：兩層浪費",
+  "kind": "measured",
+  "text": "製造與維運現場有兩層浪費，本案兩層都處理，但主從分明：\n- 第二層｜流程浪費（主角）：工程師每天手動下載 SAP-style 匯出檔、在 Excel 清理彙整、人工判讀、手動寄報表。\n  解法為 VBA 巨集 + Power Automate Desktop（RPA）+ Power BI，效益可實測。\n- 第一層｜實體浪費（技術亮點）：設備非計畫停機與過度保養。\n  解法為 VAE 異常偵測模型自動判讀健康狀態，效益為情境推估。\n方法論：Lean Six Sigma DMAIC（Define、Measure、Analyze、Improve、Control）。",
+  "source": "整理自 06-lean-lss/DMAIC.md 與根目錄 README.md（以最終版本為準）",
+  "engines": []
+ },
+ {
+  "id": "lean-02",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "2. 手動流程與浪費盤點",
+  "kind": "measured",
+  "text": "改善前的手動流程共 7 步：登入 SAP 匯出 CSV → Excel 匯入貼上 → 手動清理髒資料（去空白、去重、補缺）\n→ 手動彙整（樞紐分析）→ 人工判讀健康 → 製作報表 → 手動寄 Email。\n對應的七大浪費：Motion（反覆下載、複製貼上）、Waiting（等匯出、等彙整）、\nOverprocessing（每天重做同樣清理）、Defects（人工修正出錯、判讀主觀）、\nUnderutilized talent（工程師時間耗在行政作業）。\n實測手動完成一次清理彙整需 15 分鐘（碼錶計時）。",
+  "source": "整理自 06-lean-lss/value-stream-map.md 與 02-automation-vba/README.md；15 分鐘為碼錶實測",
+  "engines": []
+ },
+ {
+  "id": "lean-03",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "3. 自動化結果（實測）",
+  "kind": "measured",
+  "text": "VBA 巨集 CleanAndSummarize 一次處理 3 個匯出檔：\n- 原始 13,750 列 → 去除重複 654 列 → 乾淨 13,096 列\n- 狀態大小寫正規化 2,001 筆，模型 Warning 共 1,693 筆\n- 缺 NearestDistance 386 筆、缺 MaintenanceCost 901 筆\n耗時兩次實測：Alt+F8 互動執行 1.6 秒、經 Power Automate 觸發 1.844 秒，\n相較手動 15 分鐘約快 500 倍（兩次分別為 562 倍與 488 倍）。",
+  "source": "02-automation-vba/README.md 與 03-rpa-power-automate/outbox 報表 Summary 分頁（實測）",
+  "engines": []
+ },
+ {
+  "id": "lean-04",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "4. 手動作業的靜默錯誤",
+  "kind": "measured",
+  "text": "手動流程最大的風險不是慢，而是出錯時 Excel 不會報錯。若直接拿原始匯出檔做樞紐分析、\n忘了 TRIM 與統一大小寫：\n- 樞紐表會出現 300 台機台（實際只有 100 台），同一台被拆成多列\n- 狀態欄出現 6 種寫法（HEALTHY、Healthy、WARNING、Warning、healthy、warning）\n- Warning 只數到 1,496 筆，實際為 1,693 筆\n建立手動基線時真的發生過：Ctrl+H 的空白取代沒有生效，樞紐分析把前後有空白的機台代號當成另一台，且無任何錯誤訊息。\n漏算 Warning 的代價可能是一台引擎的非計畫停機。",
+  "source": "07-demo-app 自動化頁直接對原始匯出檔計算；手動基線事件記錄於 02-automation-vba/README.md",
+  "engines": []
+ },
+ {
+  "id": "lean-05",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "5. ROI 效益試算",
+  "kind": "measured",
+  "text": "實測輸入（🟢）：手動單次 900 秒、自動單次 1.6 秒，單次省時 898.4 秒。\n假設輸入（🟡，可替換）：每天 2 次、1 人、每年 240 工作天、人力成本 NT$500/小時、\n一次性導入工時 40 小時（含需求釐清、開發、測試、RPA 串接、看板、文件與訓練）。\n結果：年省約 120 小時、年省人力成本約 NT$59,893；導入成本 NT$20,000；\n首年 ROI 約 199%；回本約 80 個工作天。\n唯一的實測值是單次省時；年省工時、ROI、回本天數都建立在使用量假設上。\n使用量假設曾由 3 人 × 每天 3 次下修為 1 人 × 每天 2 次，因原假設使 ROI 高達 1,248%，不具可信度。",
+  "source": "06-lean-lss/build_roi.py 與 roi-validation.xlsx（校準版），本段依相同公式重算",
+  "engines": []
+ },
+ {
+  "id": "lean-06",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "6. 維護成本 −84% 與停機時間 −36% 的推導",
+  "kind": "measured",
+  "text": "這兩個數字是情境推估（🟡），不是實測。推導方式為 value-driver 公式，比較公開基準版本與本專案模型：\n- 公開基準：推導採用 precision 75%、recall 70%，依據為原始 Kaggle notebook\n  （wassimderbel/nasa-predictive-maintenance-rul）的分類段落；該段各模型（SVM、隨機森林、\n  Naive Bayes、KNN）在測試集上的 macro precision 約 0.66–0.72、recall 約 0.65–0.71\n- 本專案 VAE（Healthy 類實測）：precision 96.4%、recall 80.6%，推導時取整數 96%、81%\n  （若以未取整的值計算，兩個降幅分別約為 86% 與 35%）\n- 1 − Precision(Healthy)：25% → 4%，代表「判為健康、其實在衰退」的漏判比例下降 84.0%，\n  對應非計畫故障造成的維護成本\n- 1 − Recall(Healthy)：30% → 19%，代表「其實健康、卻被叫去檢修」的比例下降 36.7%（報告中記為 36%），對應不必要的停機\n限制：公開基準是 3 分類（RUL ≤68 / 69–137 / >137）、在 7,221 筆上評估；本專案是 2 分類、\n在 100 台引擎的最後一個 cycle 上評估，兩者評估方式不同。公開資料集沒有真實成本資料。",
+  "source": "推導整理自 01-core-model/docs/航太專案 量化效益對比與技術補充.xlsx；Healthy 類指標取自 model_validation.csv",
+  "engines": []
+ },
+ {
+  "id": "lean-07",
+  "doc": "lean",
+  "doc_title": "精實改善案與效益驗證",
+  "section": "7. Power Automate 流程與誠信聲明",
+  "kind": "measured",
+  "text": "實際採用的 Power Automate Desktop 流程 DailyHealthReport：開啟 Excel 執行無對話框巨集 CleanAndSummarizeSilent\n→ 儲存關閉 → 取得當日日期 → 複製報表到 outbox → 重新命名為 DailyHealthReport_yyyyMMdd.xlsm → 桌面通知。\n巨集另提供無對話框進入點，因為 RPA 遇到彈窗會卡住等人點擊。\n誠信聲明：\n- SAP 匯出檔為模擬（格式仿 SAP 匯出的髒資料），本專案未串接真實 SAP 系統\n- 「從 SAP 下載」在流程中以複製檔案模擬；分發採存檔加桌面通知，未串接 Email\n- Power Apps 僅完成設計稿（個人帳號無法部署）\n- 雲端展示網站無法執行 VBA 與 Power Automate，網站上的清理為同一套規則的 Python 重現，已與 RPA 實際產出逐項驗證一致",
+  "source": "03-rpa-power-automate/README.md、screenshots/自動化流程.png、04-powerapps-design/README.md",
+  "engines": []
+ }
+]

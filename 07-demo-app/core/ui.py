@@ -46,10 +46,12 @@ def badge_html(kind: str) -> str:
     return f'<span class="pm-badge" style="color:{colour}">{icon} {text}</span>'
 
 
-def metric_card(label: str, value: str, note: str = "", kind: str = MEASURED) -> None:
+def metric_card(label: str, value: str, note: str = "", kind: str | None = MEASURED) -> None:
+    """kind=None 表示這張卡片不是量測或推估的數字（例如狀態、數量），不加誠信標記。"""
+    badge = badge_html(kind) if kind else ""
     st.markdown(
         f"""<div class="pm-card">
-              <div class="pm-label">{label}{badge_html(kind)}</div>
+              <div class="pm-label">{label}{badge}</div>
               <div class="pm-value">{value}</div>
               <div class="pm-note">{note}</div>
             </div>""",
