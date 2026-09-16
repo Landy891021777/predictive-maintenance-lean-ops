@@ -122,7 +122,9 @@ def _chat_tab(R: Retriever, key: str | None) -> None:
                 return
             with st.spinner("檢索文件、生成回答中…"):
                 a = answer(R, question, key)
-            st.session_state[COUNT_KEY] = used + 1
+            # 只有真的生成出回答才扣次數；服務忙碌退回原文段落時不扣
+            if a.mode == "generated":
+                st.session_state[COUNT_KEY] = used + 1
     # 寫入歷史後重畫，讓剩餘題數與對話紀錄一起正確更新
     history.append(a)
     st.rerun()

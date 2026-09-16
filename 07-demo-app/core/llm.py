@@ -77,14 +77,15 @@ def get_api_key() -> str | None:
 # HTTP
 # ---------------------------------------------------------------------------
 
-def _request(method: str, path: str, key: str, body: dict | None = None) -> dict:
+def _request(method: str, path: str, key: str, body: dict | None = None,
+             timeout: float = TIMEOUT) -> dict:
     data = None if body is None else json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         f"{BASE}/{path}", data=data, method=method,
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         try:
@@ -94,6 +95,10 @@ def _request(method: str, path: str, key: str, body: dict | None = None) -> dict
         raise GeminiError(e.code, msg or e.reason) from None
     except urllib.error.URLError as e:
         raise GeminiError(0, f"連線失敗：{e.reason}") from None
+    except (TimeoutError, OSError, ValueError) as e:
+        # 讀取回應時逾時丟的是 TimeoutError，不會被包成 URLError；連線被重置、SSL 中斷則是 OSError。
+        # 沒攔的話整個頁面會噴出例外，而不是換下一個模型。
+        raise GeminiError(0, f"連線逾時或中斷：{type(e).__name__}") from None
 
 
 def list_models(key: str) -> list[dict]:
@@ -149,14 +154,15 @@ def embed_query(text: str, key: str) -> list[float]:
 # ---------------------------------------------------------------------------
 
 def generate(model: str, system: str, prompt: str, key: str,
-             temperature: float = 0.2, max_tokens: int = 2048) -> tuple[str, dict]:
+             temperature: float = 0.2, max_tokens: int = 2048,
+             timeout: float = TIMEOUT) -> tuple[str, dict]:
     """回傳 (文字, 中繼資訊)。中繼資訊含 finishReason 與 token 用量，供除錯與頁面顯示。"""
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
     }
-    r = _request("POST", f"models/{model}:generateContent", key, body)
+    r = _request("POST", f"models/{model}:generateContent", key, body, timeout=timeout)
     cands = r.get("candidates") or []
     if not cands:
         reason = r.get("promptFeedback", {}).get("blockReason", "無回應內容")

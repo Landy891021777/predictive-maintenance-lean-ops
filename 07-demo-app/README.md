@@ -133,7 +133,9 @@ py -3 07-demo-app/build/verify_cleaning.py   # 驗證清理邏輯與 RPA 實際�
 
 ### 生成與防護
 
-- Gemini 免費層，以標準庫 `urllib` 呼叫 REST API（不裝 SDK）。模型依序 `gemini-3.6-flash` → `gemini-3.1-flash-lite` → `gemini-3.5-flash`；404、429、5xx、逾時都會換下一個（免費額度按模型分開計算）
+- Gemini 免費層，以標準庫 `urllib` 呼叫 REST API（不裝 SDK）。模型依序 `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → `gemini-3.5-flash` → `gemini-3.6-flash`；404、429、5xx、逾時或連線中斷都換下一個，忙碌／逾時的模型 2 秒後再試一輪，整題上限 50 秒（免費額度按模型分開計算）
+- 主模型選 `3.5-flash-lite`：實測回應 1–2 秒且遵守 prompt 規則；`3.6-flash` 免費層每日僅 20 次，不適合當公開網站主模型
+- 生成失敗退回原文段落時**不扣**使用者的提問次數
 - System prompt：僅依段落回答、逐句標出處、數字照抄、模擬文件須告知、**但書必須保留**、防 prompt injection、離題婉拒、只在問真實維修決策時加免責
 - **出處驗證**：回答引用的片段編號必須在檢索結果中，否則標紅
 - **降級**：embedding 失敗 → BM25；生成全部失敗 → 直接列出原文段落

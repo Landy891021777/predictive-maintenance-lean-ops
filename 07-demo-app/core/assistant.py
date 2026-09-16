@@ -27,9 +27,16 @@ from dataclasses import dataclass, field
 from core.llm import GeminiError, embed_query, generate
 from core.retrieval import CORPUS_DIR, Hit, Retriever, normalize_engine_ids
 
-# 2026-09-16 以 build/probe_gemini.py 實測免費層可用（2.5 系列已不開放給新用戶）。
-# 依序嘗試：模型不存在（404）或該模型額度用完（429）就換下一個 —— 免費額度按模型分開計算。
-GENERATION_MODELS = ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"]
+# 2026-09-16 實測（build/probe_gemini.py）：
+# - 2.5 系列已不開放給新用戶
+# - gemini-3.6-flash 免費層每日僅 20 次請求，不適合當公開網站的主模型
+# - gemini-3.5-flash-lite 回應 1–2 秒，且能遵守出處、但書、防 injection 等 prompt 規則
+# 依序嘗試：404 模型不存在、429 該模型額度用完、5xx 伺服器忙碌、0 逾時或斷線 → 換下一個。
+# 免費額度按模型分開計算，多排幾個等於把額度加總。
+GENERATION_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+
+GEN_TIMEOUT = 20        # 單一模型最多等幾秒
+ANSWER_DEADLINE = 50    # 整題回答最多花幾秒（含換模型與重試），超過就改列原文段落
 
 TOP_K = 5
 MAX_QUESTIONS = 15
@@ -118,32 +125,49 @@ def answer(R: Retriever, question: str, key: str | None) -> Answer:
                       seconds=time.perf_counter() - t0)
 
     prompt = build_prompt(question, hits)
-    last_error = None
-    for model in GENERATION_MODELS:
-        try:
-            text, _ = generate(model, SYSTEM_PROMPT, prompt, key)
-        except GeminiError as e:
-            last_error = e
-            # 404 模型不存在、429 該模型額度用完、5xx 伺服器忙碌、0 逾時或斷線 → 換下一個模型
-            # 400 等請求本身的錯誤換模型也沒用 → 放棄
-            if e.status in (0, 404, 429) or e.status >= 500:
-                continue
-            break
-        if not text:
-            last_error = GeminiError(200, "模型回傳空白")
-            continue
-        ok, bad = check_citations(text, hits)
-        return Answer(question, text, hits, "generated", how, model=model, cited=ok,
-                      invalid_citations=bad, note=degraded and f"改用關鍵字檢索：{degraded}",
-                      seconds=time.perf_counter() - t0)
+    attempts: list[tuple[str, int]] = []           # (模型, 錯誤代碼)
+    busy: set[str] = set()                         # 伺服器忙碌或逾時、值得稍後再試一次的模型
 
-    if last_error and last_error.rate_limited:
-        reason = "AI 生成額度暫時用完（免費層每日額度於美國太平洋時間午夜重置，約台灣時間下午 3–4 點）"
+    # 第一輪：每個模型各試一次。第二輪：只重試「忙碌／逾時」的模型（額度用完的不重試）。
+    for round_no in (1, 2):
+        pool = GENERATION_MODELS if round_no == 1 else [m for m in GENERATION_MODELS if m in busy]
+        if round_no == 2:
+            if not pool or time.perf_counter() - t0 > ANSWER_DEADLINE - GEN_TIMEOUT:
+                break
+            time.sleep(2)
+        for model in pool:
+            remaining = ANSWER_DEADLINE - (time.perf_counter() - t0)
+            if remaining < 3:
+                break
+            try:
+                text, _ = generate(model, SYSTEM_PROMPT, prompt, key,
+                                   timeout=min(GEN_TIMEOUT, remaining))
+            except GeminiError as e:
+                attempts.append((model, e.status))
+                if e.status == 0 or e.status >= 500:
+                    busy.add(model)
+                    continue
+                if e.status in (404, 429):
+                    busy.discard(model)
+                    continue
+                break                              # 400 等請求本身的錯誤，換模型也沒用
+            if not text:
+                attempts.append((model, 200))
+                continue
+            ok, bad = check_citations(text, hits)
+            return Answer(question, text, hits, "generated", how, model=model, cited=ok,
+                          invalid_citations=bad, note=degraded and f"改用關鍵字檢索：{degraded}",
+                          seconds=time.perf_counter() - t0)
+
+    codes = [c for _, c in attempts]
+    if codes and all(c == 429 for c in codes):
+        reason = "AI 生成的免費額度暫時用完（每日額度於美國太平洋時間午夜重置，約台灣時間下午 3–4 點）"
     else:
-        code = f"，錯誤代碼 {last_error.status}" if last_error else ""
-        reason = f"AI 生成服務暫時無法使用（已嘗試 {len(GENERATION_MODELS)} 個模型{code}）"
+        label = {0: "逾時", 429: "額度用完", 404: "模型不存在", 200: "空白回應"}
+        summary = "、".join(f"{label.get(c, f'錯誤 {c}')} {codes.count(c)} 次" for c in dict.fromkeys(codes))
+        reason = f"AI 生成服務暫時忙碌（共嘗試 {len(attempts)} 次：{summary}）"
     return Answer(question, "", hits, "retrieval_only", how,
-                  note=f"{reason}，以下直接列出檢索到的原文段落。",
+                  note=f"{reason}，以下直接列出檢索到的原文段落。這一題不會扣提問次數。",
                   seconds=time.perf_counter() - t0)
 
 
