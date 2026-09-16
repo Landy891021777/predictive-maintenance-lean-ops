@@ -4,6 +4,12 @@
 >
 > 本專案以 NASA CMAPSS 航太引擎資料的 VAE 預測維護模型為核心，延伸為一套 **DMAIC 精實營運改善案**，結合 VBA、Power Automate (RPA)、Power BI 與 Power Apps 設計，展示資料分析師如何消除流程浪費並驗證效益。
 
+## 🖥 線上互動展示
+
+**https://landy-predictive-maintenance.streamlit.app/**
+
+不用安裝任何東西，直接在瀏覽器裡拉動感測器看模型即時判讀、瀏覽 13,096 筆逐筆結果、檢視被漏判的機台，並調整 ROI 假設看效益如何重算。原始碼在 [`07-demo-app/`](07-demo-app/)。
+
 ---
 
 ## 🎯 這個專案在解決什麼

@@ -50,7 +50,7 @@ PAGES = [
 ]
 
 with st.sidebar:
-    st.markdown("### 黃昱霖 Landy Huang")
+    st.markdown("### 黃茗琳 Landy Huang")
     st.caption("Predictive Maintenance & Anomaly Detection\n\nPython · RPA · RAG · Prompt Engineering")
 
 st.navigation(PAGES).run()

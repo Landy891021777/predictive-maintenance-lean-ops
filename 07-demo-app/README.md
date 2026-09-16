@@ -2,8 +2,9 @@
 
 > 把 01~06 的成果變成一個可以**自己動手驗證**的網站。
 
-線上版：（部署後補上網址）
-本機執行：
+**線上版：** https://landy-predictive-maintenance.streamlit.app/
+
+**本機執行：**
 
 ```bash
 pip install -r requirements.txt
