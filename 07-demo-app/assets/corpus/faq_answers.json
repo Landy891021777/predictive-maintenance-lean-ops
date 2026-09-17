@@ -189,5 +189,36 @@
    "manual-05"
   ],
   "invalid_citations": []
+ },
+ {
+  "question": "這個模型可以用在其他運轉條件的新引擎嗎？",
+  "text": "這個模型換到其他運轉條件的新引擎時，實測表現顯示 Accuracy 約 70% 其實是假象，且模型幾乎都把新工況判為 Healthy，這是最危險的錯法 [model_card-08]。\n\n不過，加上適用範圍檢查（距離大於 0.0209 視為超出範圍）後，可改善誤判狀況 [model_card-08]。以 FD002 為例，被誤判為健康的從 72 台降為 2 台 [model_card-08]。超出範圍時的處理規則為：判 Warning 的維持 Warning（且全數真的快故障），判 Healthy 的則改標「無法確認」不宣告健康 [model_card-08]。\n\n限制：距離門檻依 FD001 事先訂定，但「Warning 可信、Healthy 不可信」的規則是看過這四組資料後歸納的事後觀察，且 Warning 側樣本僅 17 台 [model_card-08]。",
+  "model": "gemini-3.5-flash-lite",
+  "retrieval": "vector_id",
+  "hit_ids": [
+   "model_card-08",
+   "manual-01",
+   "model_card-07",
+   "model_card-06",
+   "sop-05"
+  ],
+  "bm25_ranks": [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "vector_ranks": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "cited": [
+   "model_card-08"
+  ],
+  "invalid_citations": []
  }
 ]

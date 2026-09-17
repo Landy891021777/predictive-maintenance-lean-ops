@@ -5,7 +5,8 @@
 面試當天就算免費層額度用完，最常被點的幾題仍然能正常展示。
 回答以與線上完全相同的流程產生（檢索 → prompt → 生成 → 出處驗證）。
 
-執行：py -3 07-demo-app/build/build_faq.py
+執行：py -3 07-demo-app/build/build_faq.py          # 只補產生尚未有預存答案的題目
+      py -3 07-demo-app/build/build_faq.py --all    # 全部重新產生
 需要：.streamlit/secrets.toml 內的 GEMINI_API_KEY，以及已建立的 embeddings.npz
 """
 
@@ -17,7 +18,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from core.assistant import FAQ_PATH, SUGGESTED, answer  # noqa: E402
+from core.assistant import FAQ_PATH, SUGGESTED, answer, load_faq  # noqa: E402
 from core.llm import get_api_key  # noqa: E402
 from core.retrieval import Retriever  # noqa: E402
 
@@ -32,8 +33,15 @@ def main() -> int:
         print("❌ 尚未建立 embeddings.npz，請先執行 embed_corpus.py")
         return 1
 
+    existing = {} if "--all" in sys.argv else load_faq()
+    valid_ids = {c["id"] for c in R.chunks}
     out, ok = [], True
     for q in SUGGESTED:
+        old = existing.get(q)
+        if old and all(i in valid_ids for i in old["hit_ids"]):
+            print(f"↺ 保留既有預存答案（{old['model']}）｜{q}")
+            out.append(old)
+            continue
         a = answer(R, q, key)
         if a.mode != "generated":                  # 暫時性錯誤：等 30 秒再試一次
             print(f"⏳ 第一次失敗（{a.note}），30 秒後重試")

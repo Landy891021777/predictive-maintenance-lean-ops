@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+import io
+
 import altair as alt
 import numpy as np
 import pandas as pd
@@ -20,11 +22,14 @@ import streamlit as st
 
 from core.data import (
     get_detector,
+    load_demo_fleet,
+    load_generalization,
     load_meta,
     load_support_scatter,
     load_test_readings,
     load_validation,
 )
+from core.new_engine import STATUS_LABEL, UploadError, assess_readings, parse_upload, summarise_engines
 from core.ui import MEASURED, integrity_note, metric_card, page_header
 
 KEY_SENSORS = [2, 3, 4, 7, 8, 9, 11, 12, 13, 14, 15, 17]
@@ -82,15 +87,23 @@ def _sensor_slider(meta: dict, s: int) -> None:
 def render() -> None:
     page_header(
         "即時判讀",
-        "調整下方任一顆感測器，模型會立刻重新判讀這台引擎的健康狀態。"
-        "也可以直接載入某台真實引擎在某個 cycle 的實際讀數，看它從健康一路走向警告。",
+        "調整感測器讀數或載入真實引擎，模型會立刻判讀健康狀態；"
+        "也可以導入一批新引擎，看模型在沒見過的資料上表現如何、什麼時候不該被信任。",
         "Architected a VAE-based fault-detection framework in Python",
     )
+    t1, t2 = st.tabs(["單筆讀數", "導入新引擎"])
+    with t1:
+        _single_reading_tab()
+    with t2:
+        _new_engine_tab()
 
+
+def _single_reading_tab() -> None:
     det = get_detector()
     meta = load_meta()
     v = load_validation()
     unit, cycle, sensors = load_test_readings()
+    threshold = load_generalization()["threshold"]
 
     if STATE_KEY not in st.session_state:
         first = np.where((unit == 1) & (cycle == 1))[0][0]
@@ -147,12 +160,23 @@ def render() -> None:
     st.divider()
     st.markdown("#### 模型判讀結果")
 
+    in_range = verdict.nearest_distance <= threshold
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         if verdict.status == "Warning":
             st.error("### ⚠️ Warning\n建議安排檢查")
-        else:
+        elif in_range:
             st.success("### ✅ Healthy\n可繼續運轉")
+        else:
+            st.warning("### ❔ 無法確認\n超出模型適用範圍")
+    if not in_range:
+        st.caption(
+            f"⚠️ 這筆讀數到最近訓練點的距離 {verdict.nearest_distance:.4f}，超過適用範圍門檻 {threshold:.4f}。"
+            + ("模型原本判為 Healthy，但超出範圍時 Healthy 不可信，因此不宣告健康。"
+               if verdict.status == "Healthy" else
+               "超出範圍時模型的 Warning 仍可信（實測 17/17），因此照樣顯示。")
+            + " 詳見「導入新引擎」分頁。"
+        )
     with m2:
         metric_card("潛空間座標",
                     f"({verdict.latent[0]:.3f}, {verdict.latent[1]:.3f})",
@@ -230,3 +254,170 @@ def render() -> None:
         "與 PyTorch 原始模型的最大絕對誤差為 "
         f"{meta['numpy_vs_torch_max_abs_diff']:.1e}（float32 捨入層級）。"
     )
+
+
+# ===========================================================================
+# 導入新引擎
+# ===========================================================================
+
+SOURCE_FD003 = "示範：FD003 新機隊（同工況）"
+SOURCE_FD002 = "示範：FD002 新機隊（不同工況）"
+SOURCE_UPLOAD = "上傳自己的檔案"
+STATUS_COLOURS = {"Healthy": "#2e9e5b", "Warning": "#d6453d", "Unknown": "#9a9a9a"}
+
+
+@st.cache_data(show_spinner=False)
+def _assess_bytes(raw: bytes, threshold: float):
+    df = parse_upload(raw)
+    readings = assess_readings(get_detector(), df, threshold)
+    return readings, summarise_engines(readings)
+
+
+def _engine_name(unit: str, demo: bool) -> str:
+    return f"NEW-{int(unit):02d}" if demo else str(unit)
+
+
+def _outcome(last_status: str, true_label: str) -> str:
+    if true_label == "Warning":
+        return {"Warning": "✅ 正確預警", "Unknown": "⚠️ 未宣告健康（實際快故障）",
+                "Healthy": "❌ 誤判為健康"}[last_status]
+    return {"Healthy": "✅ 正確判為健康", "Unknown": "⚠️ 無法確認（實際健康）",
+            "Warning": "誤報"}[last_status]
+
+
+def _template_csv() -> bytes:
+    raw, _ = load_demo_fleet("FD003")
+    return pd.read_csv(io.BytesIO(raw)).drop(
+        columns=["setting_1", "setting_2", "setting_3"]).head(12).to_csv(index=False).encode("utf-8")
+
+
+def _new_engine_tab() -> None:
+    gen = load_generalization()
+    threshold = gen["threshold"]
+
+    st.markdown(
+        "模型是用 NASA CMAPSS **FD001**（單一運轉條件、單一失效模式）訓練的。"
+        "導入一批沒看過的引擎時，除了判讀，還會做**適用範圍檢查**："
+        "讀數離訓練資料太遠時，模型判的 Healthy 不可信，因此改標為「無法確認」，不宣告健康。"
+    )
+
+    source = st.radio("資料來源", [SOURCE_FD003, SOURCE_FD002, SOURCE_UPLOAD], horizontal=True)
+    demo = source != SOURCE_UPLOAD
+    answers = None
+
+    if source == SOURCE_UPLOAD:
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            up = st.file_uploader(
+                "上傳 CSV 或 TXT（NASA 原始格式，或含 s_1…s_21 欄位的表格；unit、cycle 可省略）",
+                type=["csv", "txt"])
+        with c2:
+            st.write("")
+            st.download_button("下載範本 CSV", _template_csv(), "new_engine_template.csv",
+                               "text/csv", width="stretch")
+        if up is None:
+            st.info("尚未上傳檔案。可以先下載範本，看欄位格式。")
+            return
+        raw = up.getvalue()
+    else:
+        name = "FD003" if source == SOURCE_FD003 else "FD002"
+        raw, answers = load_demo_fleet(name)
+        info = next(d for d in gen["datasets"] if d["name"] == name)
+        st.caption(
+            f"從 NASA {name}（{info['note']}）以固定亂數種子分層抽樣 8 台：真實快故障 4 台、健康 4 台，"
+            "未挑選對模型有利的引擎。重新編號為 NEW-01 起，避免與訓練機隊的 ENG-xxx 混淆。"
+        )
+
+    try:
+        readings, summary = _assess_bytes(raw, threshold)
+    except UploadError as e:
+        st.error(f"檔案格式有問題：{e}")
+        return
+
+    last = summary["last_status"]
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        metric_card("導入引擎", f"{len(summary)} 台", f"共 {len(readings):,} 筆讀數", None)
+    with c2:
+        metric_card("超出適用範圍的讀數", f"{(~readings['in_range']).mean():.0%}",
+                    f"門檻：距離 > {threshold:.4f}", MEASURED)
+    with c3:
+        metric_card("最後一筆判 Warning", f"{int((last == 'Warning').sum())} 台", "建議安排檢查", MEASURED)
+    with c4:
+        metric_card("最後一筆無法確認", f"{int((last == 'Unknown').sum())} 台",
+                    "超出範圍，不宣告健康", MEASURED)
+
+    table = pd.DataFrame({
+        "引擎": [_engine_name(u, demo) for u in summary["unit"]],
+        "讀數": summary["readings"],
+        "最後 cycle": summary["last_cycle"],
+        "最後判讀": [STATUS_LABEL[s] for s in last],
+        "觀測期間最高 SOP 等級": summary["sop_level"],
+        "超出範圍比例": summary["out_of_range_share"] * 100,
+    })
+    if answers:
+        table["真實剩餘壽命"] = [answers["true_rul"][u] for u in summary["unit"]]
+        table["真實標籤"] = [answers["true_label"][u] for u in summary["unit"]]
+        table["結果"] = [_outcome(s, answers["true_label"][u]) for s, u in zip(last, summary["unit"])]
+    st.dataframe(
+        table, hide_index=True, width="stretch",
+        column_config={
+            "超出範圍比例": st.column_config.ProgressColumn("超出範圍比例", format="%.0f%%",
+                                                          min_value=0, max_value=100),
+            "真實剩餘壽命": st.column_config.NumberColumn(format="%.0f cycles"),
+        },
+    )
+    if answers:
+        st.caption(
+            f"真實答案由 NASA 提供，僅用於驗證，判讀過程不會讀取。"
+            f"真實標籤分界：該資料集剩餘壽命的 33% 分位數 = {answers['truth_cut_rul']:.1f} cycles。"
+        )
+
+    # ---------- 單台軌跡 ----------
+    names = [_engine_name(u, demo) for u in summary["unit"]]
+    pick = st.selectbox("查看單台引擎的逐筆判讀", range(len(names)), format_func=lambda i: names[i])
+    unit = summary["unit"].iloc[pick]
+    d = readings[readings["unit"] == unit].assign(
+        判讀=lambda x: x["status"].map({"Healthy": "Healthy", "Warning": "Warning", "Unknown": "無法確認"}),
+        距離=lambda x: x["distance"].clip(lower=1e-4),
+    )
+    points = (
+        alt.Chart(d).mark_circle(size=28)
+        .encode(
+            x=alt.X("cycle:Q", title="cycle"),
+            y=alt.Y("距離:Q", title="到最近訓練點的距離（對數刻度）", scale=alt.Scale(type="log")),
+            color=alt.Color("判讀:N", scale=alt.Scale(
+                domain=["Healthy", "Warning", "無法確認"],
+                range=[STATUS_COLOURS["Healthy"], STATUS_COLOURS["Warning"], STATUS_COLOURS["Unknown"]])),
+            tooltip=["cycle", "判讀", alt.Tooltip("distance:Q", format=".4f")],
+        )
+    )
+    rule = alt.Chart(pd.DataFrame({"y": [threshold]})).mark_rule(strokeDash=[6, 4], color="#555").encode(y="y:Q")
+    st.altair_chart((points + rule).properties(height=320), width="stretch")
+    st.caption("虛線是適用範圍門檻；虛線以上的讀數超出範圍，模型若判 Healthy 會改標為「無法確認」。")
+
+    # ---------- 評估依據 ----------
+    with st.expander("為什麼要做適用範圍檢查？模型換到其他資料集的實測表現"):
+        rows = [{
+            "資料集": d["name"], "差異": d["note"], "引擎": d["engines"],
+            "Accuracy": f"{d['accuracy']:.1%}",
+            "快故障抓到": f"{d['caught']}/{d['true_warning']}",
+            "未加檢查：誤判為健康": f"{d['missed']}/{d['true_warning']}",
+            "加了檢查：誤判為健康": f"{d['guarded_falsely_healthy']}/{d['true_warning']}",
+        } for d in gen["datasets"]]
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+        p = gen["pooled_out_of_range_last_reading"]
+        st.markdown(
+            f"""
+- **Accuracy 約 70% 是假象**：快故障的引擎只佔約三分之一，全部判 Healthy 也能拿到約 67%。
+  該看的是「快故障抓到幾台」—— 換到 FD002、FD004 時幾乎都被判成 Healthy。
+- **但超出範圍量得出來**：FD002 的六種運轉條件中，只有海平面那一種（與訓練資料相同）落在範圍內。
+- **超出範圍時，Warning 可信、Healthy 不可信**：四組資料最後一筆超出範圍者，判 Warning 的
+  {p['out_warning']} 台全部真的快故障；判 Healthy 的 {p['out_healthy']} 台中有 {p['out_healthy_true']} 台其實快故障。
+            """
+        )
+        cond = pd.DataFrame(gen["fd002_by_condition"]).rename(
+            columns={"cond": "FD002 運轉條件（高度／馬赫／油門）", "readings": "讀數", "in_range_share": "範圍內比例"})
+        cond["範圍內比例"] = cond["範圍內比例"].map("{:.1%}".format)
+        st.dataframe(cond, hide_index=True, width="stretch")
+        st.caption("⚠️ 限制：" + "；".join(gen["caveats"]) + "。")

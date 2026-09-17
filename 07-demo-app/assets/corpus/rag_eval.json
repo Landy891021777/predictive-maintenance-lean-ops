@@ -2,7 +2,7 @@
  "bm25": {
   "hit@3": 0.8888888888888888,
   "hit@5": 0.9444444444444444,
-  "mrr": 0.7757335257335257,
+  "mrr": 0.7756734006734006,
   "per_question": [
    {
     "q": "ENG-064 的工單現在是什麼狀態？",
@@ -25,7 +25,7 @@
     "top3": [
      "shift_logs-08",
      "shift_logs-07",
-     "sop-03"
+     "model_card-08"
     ],
     "gold": [
      "shift_logs-08",
@@ -141,11 +141,11 @@
    {
     "q": "模型有哪些引擎沒抓到？",
     "kind": "換句話說",
-    "rank": 21,
+    "rank": 22,
     "top3": [
      "model_card-04",
-     "model_card-01",
-     "model_card-06"
+     "model_card-08",
+     "model_card-01"
     ],
     "gold": [
      "model_card-05"
@@ -289,7 +289,7 @@
     "top3": [
      "sop-05",
      "model_card-07",
-     "manual-01"
+     "model_card-08"
     ],
     "gold": [
      "model_card-07"
@@ -770,8 +770,8 @@
     "rank": 1,
     "top3": [
      "model_card-07",
-     "model_card-06",
-     "model_card-02"
+     "model_card-08",
+     "model_card-06"
     ],
     "gold": [
      "model_card-07"
@@ -1252,8 +1252,8 @@
     "rank": 1,
     "top3": [
      "model_card-07",
-     "sop-05",
-     "model_card-06"
+     "model_card-08",
+     "sop-05"
     ],
     "gold": [
      "model_card-07"
@@ -1734,8 +1734,8 @@
     "rank": 1,
     "top3": [
      "model_card-07",
-     "model_card-06",
-     "model_card-02"
+     "model_card-08",
+     "model_card-06"
     ],
     "gold": [
      "model_card-07"

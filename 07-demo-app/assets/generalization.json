@@ -1,0 +1,137 @@
+{
+ "threshold": 0.02090044692158699,
+ "threshold_definition": "FD001 測試集全部 13,096 筆讀數到最近 support 點距離的第 99 百分位",
+ "datasets": [
+  {
+   "name": "FD001",
+   "conditions": 1,
+   "fault_modes": 1,
+   "note": "訓練資料的工況",
+   "engines": 100,
+   "readings": 13096,
+   "truth_cut_rul": 52.68000000000001,
+   "accuracy": 0.85,
+   "warning_precision": 0.7045454545454546,
+   "warning_recall": 0.9393939393939394,
+   "true_warning": 33,
+   "caught": 31,
+   "missed": 2,
+   "false_alarms": 13,
+   "predicted_warning_share": 0.44,
+   "readings_out_of_range_share": 0.010003054367745876,
+   "last_out_of_range": 7,
+   "missed_flagged_out_of_range": 0,
+   "guarded_unknown": 1,
+   "guarded_falsely_healthy": 2
+  },
+  {
+   "name": "FD003",
+   "conditions": 1,
+   "fault_modes": 2,
+   "note": "同工況，多一種失效模式：風扇衰退",
+   "engines": 100,
+   "readings": 16596,
+   "truth_cut_rul": 55.0,
+   "accuracy": 0.72,
+   "warning_precision": 0.7,
+   "warning_recall": 0.3888888888888889,
+   "true_warning": 36,
+   "caught": 14,
+   "missed": 22,
+   "false_alarms": 6,
+   "predicted_warning_share": 0.2,
+   "readings_out_of_range_share": 0.5454326343697277,
+   "last_out_of_range": 46,
+   "missed_flagged_out_of_range": 17,
+   "guarded_unknown": 43,
+   "guarded_falsely_healthy": 5
+  },
+  {
+   "name": "FD002",
+   "conditions": 6,
+   "fault_modes": 1,
+   "note": "六種運轉條件",
+   "engines": 259,
+   "readings": 33991,
+   "truth_cut_rul": 48.14,
+   "accuracy": 0.7142857142857143,
+   "warning_precision": 0.875,
+   "warning_recall": 0.16279069767441862,
+   "true_warning": 86,
+   "caught": 14,
+   "missed": 72,
+   "false_alarms": 2,
+   "predicted_warning_share": 0.06177606177606178,
+   "readings_out_of_range_share": 0.8506369333058751,
+   "last_out_of_range": 224,
+   "missed_flagged_out_of_range": 70,
+   "guarded_unknown": 218,
+   "guarded_falsely_healthy": 2
+  },
+  {
+   "name": "FD004",
+   "conditions": 6,
+   "fault_modes": 2,
+   "note": "六種運轉條件、兩種失效模式",
+   "engines": 248,
+   "readings": 41214,
+   "truth_cut_rul": 54.530000000000015,
+   "accuracy": 0.6895161290322581,
+   "warning_precision": 0.8571428571428571,
+   "warning_recall": 0.07317073170731707,
+   "true_warning": 82,
+   "caught": 6,
+   "missed": 76,
+   "false_alarms": 1,
+   "predicted_warning_share": 0.028225806451612902,
+   "readings_out_of_range_share": 0.9337361090891445,
+   "last_out_of_range": 235,
+   "missed_flagged_out_of_range": 76,
+   "guarded_unknown": 233,
+   "guarded_falsely_healthy": 0
+  }
+ ],
+ "pooled_out_of_range_last_reading": {
+  "out_warning": 17,
+  "out_warning_true": 17,
+  "out_healthy": 495,
+  "out_healthy_true": 163
+ },
+ "fd002_by_condition": [
+  {
+   "cond": "0k ft / Mach 0.0 / TRA 100",
+   "readings": 5148,
+   "in_range_share": 0.9862082362082362
+  },
+  {
+   "cond": "10k ft / Mach 0.25 / TRA 100",
+   "readings": 5107,
+   "in_range_share": 0.0
+  },
+  {
+   "cond": "20k ft / Mach 0.7 / TRA 100",
+   "readings": 5063,
+   "in_range_share": 0.0
+  },
+  {
+   "cond": "25k ft / Mach 0.62 / TRA 60",
+   "readings": 5042,
+   "in_range_share": 0.0
+  },
+  {
+   "cond": "35k ft / Mach 0.84 / TRA 100",
+   "readings": 5148,
+   "in_range_share": 0.0
+  },
+  {
+   "cond": "42k ft / Mach 0.84 / TRA 100",
+   "readings": 8483,
+   "in_range_share": 0.0
+  }
+ ],
+ "caveats": [
+  "距離門檻依 FD001（訓練工況）事先訂定",
+  "「超出範圍時 Warning 可信、Healthy 不可信」是看過 FD001–FD004 結果後歸納的，屬事後觀察",
+  "超出範圍且判 Warning 的樣本僅 17 台"
+ ]
+}

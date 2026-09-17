@@ -18,7 +18,7 @@ streamlit run 07-demo-app/app.py
 | 分頁 | 你可以做什麼 | 對應履歷主張 |
 |---|---|---|
 | 總覽 | 一頁看懂兩層浪費、資料流、關鍵數字 | 整條 bullet |
-| 即時判讀 | 拉 21 顆感測器滑桿，當場看模型判 Healthy / Warning | `VAE-based fault-detection framework` |
+| 即時判讀 | 拉 21 顆感測器滑桿當場判讀；**導入新引擎**（上傳 CSV 或示範 FD003/FD002 機隊），附適用範圍檢查 | `VAE-based fault-detection framework` |
 | 機隊軌跡 | 13,096 筆逐筆判讀、單台退化軌跡、被漏判的 2 台 | 早期異常偵測 |
 | 自動化 | 髒匯出檔 → 一鍵清理彙總 → 下載報表；與 Power Automate 實際產出逐項對照 | `Automated reporting via RPA/Power Automate` |
 | AI 助理 | 用自然語言問維修手冊、SOP、工單、交接紀錄，回答逐句標出處 | `AI chatbot ... powered by RAG and an LLM API` |
@@ -159,4 +159,33 @@ py -3 07-demo-app/build/embed_corpus.py   # 段落向量（需金鑰；免費層
 py -3 07-demo-app/build/rag_eval.py       # 檢索評估
 py -3 07-demo-app/build/build_faq.py      # 建議問題的預存回答
 py -3 07-demo-app/build/rag_redteam.py    # 紅隊測試
+```
+
+---
+
+## 導入新引擎與適用範圍檢查
+
+使用者問「導入新引擎也能判讀嗎？」—— 用同系列、附真實答案的 NASA FD002–FD004 實測
+（`build/export_new_engine_assets.py`，評估方式比照 FD001：每台最後一個 cycle）：
+
+| 資料集 | 差異 | Accuracy | 快故障抓到 | 未加檢查：誤判為健康 | 加了檢查：誤判為健康 |
+|---|---|---|---|---|---|
+| FD001 | 訓練工況 | 85.0% | 31/33 | 2/33 | 2/33 |
+| FD003 | 同工況，多一種失效模式 | 72.0% | 14/36 | 22/36 | **5/36** |
+| FD002 | 六種運轉條件 | 71.4% | 14/86 | 72/86 | **2/86** |
+| FD004 | 六種運轉條件、兩種失效模式 | 69.0% | 6/82 | 76/82 | **0/82** |
+
+- **Accuracy 約 70% 是假象**：快故障只佔約三分之一，全部判 Healthy 也有約 67%
+- **適用範圍檢查**：讀數到最近訓練點的距離 > 0.0209（FD001 測試集第 99 百分位）即超出範圍。
+  FD002 六種運轉條件中，只有與訓練資料相同的海平面條件落在範圍內
+- **超出範圍時**：判 Warning 照樣顯示（17/17 真的快故障）；判 Healthy 改為「無法確認」（495 台中 163 台其實快故障）
+
+> 限制：距離門檻事先訂定，但「Warning 可信、Healthy 不可信」是看過四組資料後歸納的事後觀察，Warning 側僅 17 台。
+
+示範機隊以固定亂數種子分層抽樣（每組 4 台快故障、4 台健康），不挑選對模型有利的引擎。
+上傳檔接受 NASA 原始格式（26 欄無表頭）或含 `s_1…s_21` 的 CSV；格式錯誤會回傳可讀的說明。
+
+```bash
+py -3 07-demo-app/build/export_new_engine_assets.py   # 評估 + 示範機隊（需本機 NASA 原始資料）
+py -3 07-demo-app/build/verify_new_engine.py          # 回歸測試（上傳格式、錯誤處理、「超出範圍永不回報 Healthy」）
 ```

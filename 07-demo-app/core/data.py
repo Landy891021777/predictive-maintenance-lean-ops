@@ -148,3 +148,17 @@ def load_raw_export_lines(max_lines: int = 5000) -> tuple[str, list[str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as fh:
         lines = [ln.rstrip("\r\n") for _, ln in zip(range(max_lines), fh)]
     return path.name, lines
+
+
+@st.cache_data
+def load_generalization() -> dict:
+    """模型換到 FD002–FD004 的評估結果與適用範圍門檻（build/export_new_engine_assets.py 產生）。"""
+    return json.loads((ASSETS / "generalization.json").read_text(encoding="utf-8"))
+
+
+@st.cache_data
+def load_demo_fleet(name: str) -> tuple[bytes, dict]:
+    """示範新機隊的原始 CSV 位元組與真實答案（僅供驗證展示）。"""
+    raw = (ASSETS / "demo_fleets" / f"{name}_demo.csv").read_bytes()
+    answers = json.loads((ASSETS / "demo_fleets" / "answers.json").read_text(encoding="utf-8"))[name]
+    return raw, answers

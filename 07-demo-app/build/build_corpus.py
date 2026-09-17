@@ -501,7 +501,7 @@ Healthy 類：precision {hp:.4f}、recall {hr:.4f}
 
     add(doc, title, "7. 限制與部署", MEASURED, f"""
 限制：
-- 僅在 FD001（單一運轉條件、單一失效模式）上訓練與評估，未驗證於多工況資料
+- 僅在 FD001（單一運轉條件、單一失效模式）上訓練；換到其他工況的實測表現見第 8 節
 - 公開模擬資料集，無真實維修成本資料；成本效益（維護成本 −84%、停機 −36%）為情境推估
 - 二分類是刻意的設計取捨：現場需要的是「要不要處理」的決策，而非精確的剩餘壽命數字
 部署：
@@ -509,6 +509,26 @@ Healthy 類：precision {hp:.4f}、recall {hr:.4f}
 - NumPy 版與 PyTorch 版最大絕對誤差 {m['numpy_vs_torch_max_abs_diff']:.1e}，
   並驗證可逐格重現上述評估結果與 13,096 筆逐筆判讀
 """, src)
+
+    gen = json.loads((APP / "assets" / "generalization.json").read_text(encoding="utf-8"))
+    ds = {d["name"]: d for d in gen["datasets"]}
+    pool = gen["pooled_out_of_range_last_reading"]
+    in_cond = [c for c in gen["fd002_by_condition"] if c["in_range_share"] > 0.5]
+    lines = [
+        f"- {n}（{ds[n]['note']}）：Accuracy {ds[n]['accuracy']:.1%}，快故障 {ds[n]['true_warning']} 台只抓到 "
+        f"{ds[n]['caught']} 台；加上適用範圍檢查後，被誤判為健康的從 {ds[n]['missed']} 台降為 "
+        f"{ds[n]['guarded_falsely_healthy']} 台"
+        for n in ["FD003", "FD002", "FD004"]
+    ]
+    add(doc, title, "8. 換到其他工況的新引擎：實測表現與適用範圍檢查", MEASURED, f"""
+問題：導入新引擎也能判讀嗎？以同系列、附真實答案的 NASA FD002 / FD003 / FD004 實測（評估方式比照 FD001：每台最後一個 cycle）。
+{chr(10).join(lines)}
+Accuracy 約 70% 是假象：快故障只佔約三分之一，全部判 Healthy 也有約 67%。換工況時模型幾乎都判 Healthy，這是最危險的錯法。
+適用範圍檢查：讀數到最近訓練點的距離超過 {gen['threshold']:.4f}（FD001 測試集第 99 百分位）即視為超出範圍。
+FD002 六種運轉條件中，只有 {len(in_cond)} 種（{'、'.join(c['cond'] for c in in_cond)}，與訓練資料相同的海平面條件）落在範圍內。
+超出範圍時：判 Warning 的 {pool['out_warning']} 台全部真的快故障，照樣顯示 Warning；判 Healthy 的 {pool['out_healthy']} 台中 {pool['out_healthy_true']} 台其實快故障，因此改標「無法確認」，不宣告健康。
+限制：距離門檻依 FD001 事先訂定，但「Warning 可信、Healthy 不可信」的規則是看過這四組資料後歸納的事後觀察，且 Warning 側樣本僅 {pool['out_warning']} 台。
+""", "07-demo-app/assets/generalization.json（build/export_new_engine_assets.py 以 NASA FD001–FD004 實測）")
 
 
 # ===========================================================================
