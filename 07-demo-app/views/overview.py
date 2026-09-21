@@ -83,7 +83,7 @@ def render() -> None:
             """
 左側每一頁都對應履歷上的一句話，你可以直接跳到最想質疑的那一句：
 
-- **即時判讀** — 模型是不是真的在跑？自己拉感測器滑桿試試
+- **即時判讀** — 模型是不是真的在跑？自己拉感測器滑桿，或導入一批沒見過的新引擎
 - **機隊軌跡** — 13,096 筆判讀長什麼樣？哪 2 台被漏判？
 - **自動化** — 髒資料變乾淨，按一個鈕看它發生
 - **AI 助理** — 用自然語言問維修手冊與工單
@@ -139,6 +139,6 @@ download-clean-summarise-email routine.
   every input is adjustable on the *效益驗證* page.
 
 Stack: Python · NumPy · VAE (PyTorch, exported to NumPy for deployment) ·
-VBA · Power Automate Desktop · Power BI · RAG + Claude API · Lean/Six Sigma (DMAIC)
+VBA · Power Automate Desktop · Power BI · RAG + Gemini API · Lean/Six Sigma (DMAIC)
             """
         )

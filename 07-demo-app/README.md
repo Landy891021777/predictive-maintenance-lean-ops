@@ -22,7 +22,7 @@ streamlit run 07-demo-app/app.py
 | 機隊軌跡 | 13,096 筆逐筆判讀、單台退化軌跡、被漏判的 2 台 | 早期異常偵測 |
 | 自動化 | 髒匯出檔 → 一鍵清理彙總 → 下載報表；與 Power Automate 實際產出逐項對照 | `Automated reporting via RPA/Power Automate` |
 | AI 助理 | 用自然語言問維修手冊、SOP、工單、交接紀錄，回答逐句標出處 | `AI chatbot ... powered by RAG and an LLM API` |
-| 效益驗證 | 拉假設滑桿，看 84% / 36% / ROI 即時重算（P4） | 效益數字 |
+| 效益驗證 | 拉假設滑桿即時重算 ROI；84% / 36% 的 value-driver 推導與基準敏感度；品質效益 | `reduced maintenance costs by 84% and equipment downtime by 36%` |
 
 ---
 
@@ -189,3 +189,12 @@ py -3 07-demo-app/build/rag_redteam.py    # 紅隊測試
 py -3 07-demo-app/build/export_new_engine_assets.py   # 評估 + 示範機隊（需本機 NASA 原始資料）
 py -3 07-demo-app/build/verify_new_engine.py          # 回歸測試（上傳格式、錯誤處理、「超出範圍永不回報 Healthy」）
 ```
+
+---
+
+## 效益驗證頁
+
+- **預設值直接讀自 `06-lean-lss/roi-validation.xlsx`**，公式與試算表相同（`core/roi.py`）；試算表改了網頁自動跟著變
+- 流程自動化 ROI：🟢 手動 900 秒、自動 1.6 秒（可切換為 Power Automate 那次的 1.844 秒）；🟡 次數、人數、工作天、時薪、導入工時可調，附敏感度圖
+- 設備健康 84% / 36%：value-driver 公式攤開，基準可調，可切換取整（96% / 81%）與未取整（96.43% / 80.60%）
+- `build/verify_roi.py`：重現校準版（119.8 小時、ROI 199.5%、回本 80.1 工作天）與早期樂觀假設（539 小時、ROI 1,248%），並核對 84.0% / 36.7% / 85.7% / 35.3%
